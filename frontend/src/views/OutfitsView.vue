@@ -8,10 +8,20 @@ import ErrorState from '@/components/ErrorState.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import type { OutfitItem, SavedOutfit, Season } from '@/types/api'
-import { SEASON_LABELS, SEASONS } from '@/types/api'
+import { CATEGORY_LABELS, SEASON_LABELS, SEASONS } from '@/types/api'
 import { describeError } from '@/utils/errors'
 import { useToastStore } from '@/stores/toast'
 import { onMounted } from 'vue'
+import { imageUrl } from '@/api/client'
+
+const MAX_VISIBLE_THUMBS = 5
+
+function thumbUrl(item: OutfitItem): string | null {
+  if (item.garmentId == null || !item.coverImageId) return null
+  const imageId = Number(item.coverImageId)
+  if (!Number.isFinite(imageId)) return null
+  return imageUrl(item.garmentId, imageId)
+}
 
 const router = useRouter()
 const toast = useToastStore()
@@ -239,6 +249,35 @@ const currentCount = computed(() => currentOutfit.value.length)
 
       <ul v-else class="saved__list">
         <li v-for="outfit in savedOutfits" :key="outfit.id" class="saved__item card">
+          <div
+            class="saved__thumbs"
+            :aria-label="`${outfit.items.length} prendas en este conjunto`"
+          >
+            <span
+              v-for="item in outfit.items.slice(0, MAX_VISIBLE_THUMBS)"
+              :key="(item.garmentId ?? item.name) + '-thumb'"
+              class="saved__thumb"
+              :title="`${CATEGORY_LABELS[item.category]} · ${item.name}`"
+            >
+              <img
+                v-if="thumbUrl(item)"
+                :src="thumbUrl(item)!"
+                :alt="item.name"
+                loading="lazy"
+              />
+              <span v-else class="saved__thumb-fallback" aria-hidden="true">
+                {{ item.name.charAt(0).toUpperCase() }}
+              </span>
+            </span>
+            <span
+              v-if="outfit.items.length > MAX_VISIBLE_THUMBS"
+              class="saved__thumb saved__thumb--more"
+              :title="`+${outfit.items.length - MAX_VISIBLE_THUMBS} prendas más`"
+            >
+              +{{ outfit.items.length - MAX_VISIBLE_THUMBS }}
+            </span>
+          </div>
+
           <button class="saved__open" type="button" @click="openSaved(outfit.id)">
             <span class="saved__name">{{ outfit.name }}</span>
             <span class="saved__meta subtle">
@@ -380,8 +419,52 @@ const currentCount = computed(() => currentOutfit.value.length)
 .saved__item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
+}
+
+.saved__thumbs {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.saved__thumb {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-surface-muted);
+  border: 2px solid var(--color-surface);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-left: -8px;
+  flex-shrink: 0;
+}
+
+.saved__thumb:first-child {
+  margin-left: 0;
+}
+
+.saved__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.saved__thumb-fallback {
+  line-height: 1;
+}
+
+.saved__thumb--more {
+  background: var(--color-border-strong);
+  color: var(--color-surface);
+  font-size: 0.72rem;
 }
 
 .saved__open {
