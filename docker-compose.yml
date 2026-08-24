@@ -1,0 +1,50 @@
+# ============================================================
+# docker-compose.yml - stack completo: postgres + backend
+# ============================================================
+# Uso:
+#   docker compose --env-file .env.docker up -d
+#   docker compose --env-file .env.docker down
+#   docker compose --env-file .env.docker logs -f backend
+# ============================================================
+
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: wardrobe-pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: wardrobe
+      POSTGRES_USER: wardrobe
+      POSTGRES_PASSWORD: wardrobe
+    volumes:
+      - wardrobe-db:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wardrobe -d wardrobe"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build: .
+    image: wardrobe-backend
+    container_name: wardrobe
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env.docker
+    environment:
+      # El backend se conecta a Postgres por el nombre de servicio de compose
+      DB_URL: jdbc:postgresql://postgres:5432/wardrobe
+    ports:
+      - "8080:8080"
+    volumes:
+      - wardrobe-images:/app/data/images
+
+volumes:
+  wardrobe-db:
+  wardrobe-images:

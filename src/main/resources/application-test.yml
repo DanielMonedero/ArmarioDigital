@@ -1,0 +1,20 @@
+spring:
+  config:
+    activate:
+      on-profile: test
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+app:
+  auth:
+    allow-user-creation: true
+  seed:
+    enabled: false
+  storage:
+    images-path: ${java.io.tmpdir}/wardrobe-test-images
+
+logging:
+  level:
+    org.springframework.web: INFO
+    org.hibernate: WARN

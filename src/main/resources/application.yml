@@ -1,0 +1,72 @@
+spring:
+  application:
+    name: wardrobe
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/wardrobe}
+    username: ${DB_USERNAME:wardrobe}
+    password: ${DB_PASSWORD:wardrobe}
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      connection-timeout: 30000
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 25
+        order_inserts: true
+        order_updates: true
+        format_sql: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: ${APP_UPLOAD_MAX_SIZE:10MB}
+      max-request-size: ${APP_UPLOAD_MAX_REQUEST_SIZE:11MB}
+      file-size-threshold: 1MB
+
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        same-site: lax
+        secure: ${SESSION_COOKIE_SECURE:false}
+      timeout: ${SESSION_TIMEOUT:24h}
+
+app:
+  storage:
+    images-path: ${APP_STORAGE_IMAGES_PATH:./data/images}
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000}
+  auth:
+    allow-user-creation: ${APP_AUTH_ALLOW_USER_CREATION:false}
+  seed:
+    enabled: ${SEED_ENABLED:false}
+    username: ${SEED_ADMIN_USERNAME:admin}
+    password: ${SEED_ADMIN_PASSWORD:admin123}
+    display-name: ${SEED_ADMIN_DISPLAY_NAME:Admin}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  level:
+    root: INFO
+    com.example.wardrobe: INFO
+    org.hibernate.SQL: WARN

@@ -1,0 +1,14 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+
+app:
+  auth:
+    allow-user-creation: true
+  seed:
+    enabled: true
+
+logging:
+  level:
+    com.example.wardrobe: DEBUG
