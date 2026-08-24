@@ -168,20 +168,27 @@ suyo. Para crear cuentas nuevas tienes dos opciones:
 
 ## Puesta en marcha (rápido)
 
-Si ya tienes Docker, el stack completo (Postgres + backend) se levanta
-con un único comando:
+Si ya tienes Docker, el stack completo (Postgres + backend + frontend)
+se levanta con un único comando y expone un único puerto:
 
 ```bash
-cp .env.docker.example .env.docker
+cp .env.docker.example .env.docker   # solo la primera vez
 docker compose --env-file .env.docker up -d
 ```
+
+Tras unos segundos tendrás la app corriendo en **http://localhost:8080**:
+ahí mismo está el frontend, la API, Swagger y el healthcheck. No hay
+que abrir puertos adicionales ni configurar nada.
 
 Tras el primer arranque se crea automáticamente un usuario `admin`
 (usuario: `admin`, contraseña: `admin123`) si activas el seed. **Cámbiala
 en cuanto entres.**
 
-El frontend estático se sirve desde el mismo origen que el backend
-(nginx, traefik…) o se puede desarrollar en local con:
+Los datos (base de datos y fotos subidas) viven en volúmenes Docker
+nombrados, así que sobreviven a `docker compose down` y vuelven a estar
+disponibles con un `up -d`.
+
+Si prefieres desarrollar el frontend en local con hot-reload:
 
 ```bash
 cd frontend

@@ -1,10 +1,14 @@
 # ============================================================
-# docker-compose.yml - stack completo: postgres + backend
+# docker-compose.yml - stack completo: postgres + backend + frontend
 # ============================================================
 # Uso:
 #   docker compose --env-file .env.docker up -d
 #   docker compose --env-file .env.docker down
 #   docker compose --env-file .env.docker logs -f backend
+#
+# Sólo se expone el puerto 8080 (nginx del frontend). Postgres y el
+# backend quedan en la red interna de compose y solo son accesibles
+# desde el resto de servicios.
 # ============================================================
 
 services:
@@ -18,9 +22,9 @@ services:
       POSTGRES_USER: wardrobe
       POSTGRES_PASSWORD: wardrobe
     volumes:
+      # Volumen nombrado -> los datos sobreviven a `docker compose down`.
       - wardrobe-db:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+    # Sin ports: la BD sólo es accesible desde los otros servicios.
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U wardrobe -d wardrobe"]
       interval: 5s
@@ -40,10 +44,22 @@ services:
     environment:
       # El backend se conecta a Postgres por el nombre de servicio de compose
       DB_URL: jdbc:postgresql://postgres:5432/wardrobe
-    ports:
-      - "8080:8080"
+    # Sin ports: el backend solo lo consume el frontend (nginx).
     volumes:
       - wardrobe-images:/app/data/images
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: wardrobe-frontend
+    container_name: wardrobe-web
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+    # Nginx habla con el backend por el nombre de servicio en la red interna.
 
 volumes:
   wardrobe-db:

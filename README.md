@@ -325,9 +325,54 @@ demonio Docker disponible
 
 ## Docker
 
-Se incluye un Dockerfile multi-stage. Usa Eclipse Temurin 21 y produce una
-imagen de runtime pequeña basada en JRE. La imagen no corre como root y
-expone el directorio de imágenes subidas como volumen.
+Hay dos Dockerfiles:
+
+- `Dockerfile` (raíz): build multi-stage del backend con Eclipse Temurin 21,
+  imagen final basada en JRE Alpine y usuario no-root.
+- `frontend/Dockerfile`: build multi-stage de la SPA con Node 22 +
+  runtime con `nginx:1.27-alpine`.
+
+El `docker-compose.yml` levanta los tres servicios (Postgres, backend,
+frontend) y expone **un único puerto al host**: `8080` (nginx). Postgres
+y backend quedan en la red interna de compose; nginx hace de proxy inverso
+hacia el backend para `/api`, `/v3/api-docs`, `/swagger-ui` y `/actuator`,
+así que el frontend habla siempre con el mismo origen y no hace falta
+CORS ni `VITE_API_BASE_URL`.
+
+Los datos sobreviven a `docker compose down` porque se guardan en dos
+volúmenes nombrados:
+
+- `wardrobe-db`: el directorio de datos de Postgres (`/var/lib/postgresql/data`).
+- `wardrobe-images`: las fotos subidas en el backend (`/app/data/images`).
+
+### Arranque completo
+
+```bash
+cp .env.docker.example .env.docker   # solo la primera vez
+docker compose --env-file .env.docker up -d
+```
+
+Tras unos segundos:
+
+- App:    http://localhost:8080
+- API:    http://localhost:8080/api
+- Swagger: http://localhost:8080/swagger-ui.html
+- Health: http://localhost:8080/actuator/health
+
+### Comandos útiles
+
+```bash
+docker compose --env-file .env.docker logs -f backend   # logs backend
+docker compose --env-file .env.docker logs -f frontend  # logs nginx
+docker compose --env-file .env.docker down              # parar (conserva datos)
+docker compose --env-file .env.docker down -v           # parar y borrar TODO (BD + fotos)
+docker compose --env-file .env.docker up -d --build     # rebuild tras cambios
+```
+
+### Solo backend (sin compose)
+
+Si prefieres ejecutar el backend aislado (por ejemplo para un IDE que
+necesita acceso directo al JAR):
 
 ```bash
 docker build -t wardrobe-backend .
@@ -336,14 +381,9 @@ docker run -d --name wardrobe \
     -e DB_URL=jdbc:postgresql://host.docker.internal:5432/wardrobe \
     -e DB_USERNAME=wardrobe \
     -e DB_PASSWORD=wardrobe \
-    -e APP_CORS_ALLOWED_ORIGINS=http://localhost:5173 \
     -v wardrobe-images:/app/data/images \
     wardrobe-backend
 ```
-
-Para un stack totalmente contenedorizado puedes emparejar el backend con la
-imagen oficial de PostgreSQL y persistir tanto la base de datos como las
-imágenes subidas mediante volúmenes de Docker.
 
 ## Decisiones arquitectónicas
 

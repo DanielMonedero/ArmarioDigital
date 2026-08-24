@@ -190,16 +190,24 @@ Cada vista lista contempla:
 
 ## Build de producción
 
+En el despliegue recomendado se usa el `Dockerfile` incluido y todo el
+stack se levanta con `docker compose` (Postgres + backend + nginx). El
+SPA se sirve desde nginx en el mismo origen que el backend, así que las
+cookies de sesión funcionan sin tocar CORS y no hace falta
+`VITE_API_BASE_URL`. Solo se expone el puerto `8080`.
+
+Si quieres construir el bundle manualmente:
+
 ```bash
 npm run build
 ```
 
-Genera `frontend/dist/` con todo el bundle estático. En despliegue real se
-sirve desde el mismo origen que el backend (típicamente tras un reverse
-proxy tipo Nginx o Traefik) para que las cookies de sesión funcionen sin
-configurar CORS. Si necesitas separar orígenes, define
-`VITE_API_BASE_URL=https://api.tu-dominio` antes de construir y configura
-los orígenes permitidos en el backend (`APP_CORS_ALLOWED_ORIGINS`).
+Genera `frontend/dist/` con todo el bundle estático.
+
+Si necesitas separar orígenes (por ejemplo CDN + API en otro dominio),
+define `VITE_API_BASE_URL=https://api.tu-dominio` antes de construir y
+configura los orígenes permitidos en el backend
+(`APP_CORS_ALLOWED_ORIGINS`).
 
 ## Decisiones arquitectónicas
 
