@@ -6,9 +6,14 @@
 #   docker compose --env-file .env.docker down
 #   docker compose --env-file .env.docker logs -f backend
 #
-# Sólo se expone el puerto 8080 (nginx del frontend). Postgres y el
-# backend quedan en la red interna de compose y solo son accesibles
-# desde el resto de servicios.
+# Sólo se expone el puerto 8080 (nginx del frontend). Postgres
+# y backend quedan en la red interna de compose y solo son
+# accesibles desde el resto de servicios.
+#
+# IMPORTANTE: Postgres toma su contraseña inicial del .env.docker
+# (DB_PASSWORD). El valor queda grabado en el volumen wardrobe-db
+# la primera vez que arranca; cambiar DB_PASSWORD después requiere
+# borrar el volumen (docker compose down -v) y perder los datos.
 # ============================================================
 
 services:
@@ -18,9 +23,12 @@ services:
     container_name: wardrobe-pg
     restart: unless-stopped
     environment:
-      POSTGRES_DB: wardrobe
-      POSTGRES_USER: wardrobe
-      POSTGRES_PASSWORD: wardrobe
+      POSTGRES_DB: ${DB_NAME:-wardrobe}
+      POSTGRES_USER: ${DB_USERNAME:-wardrobe}
+      # El valor por defecto es solo para clusters NUEVOS. Si ya tenías
+      # el volumen wardrobe-db inicializado con otra contraseña, ajusta
+      # DB_PASSWORD para que coincida.
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set in .env.docker}
     volumes:
       # Volumen nombrado -> los datos sobreviven a `docker compose down`.
       - wardrobe-db:/var/lib/postgresql/data
@@ -42,8 +50,8 @@ services:
     env_file:
       - .env.docker
     environment:
-      # El backend se conecta a Postgres por el nombre de servicio de compose
-      DB_URL: jdbc:postgresql://postgres:5432/wardrobe
+      # El backend se conecta a Postgres por el nombre de servicio de compose.
+      DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-wardrobe}
     # Sin ports: el backend solo lo consume el frontend (nginx).
     volumes:
       - wardrobe-images:/app/data/images
