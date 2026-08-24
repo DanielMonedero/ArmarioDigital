@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { ApiError } from '@/api/client'
@@ -18,6 +18,16 @@ const showCreate = ref(false)
 const newUser = ref({ username: '', password: '', displayName: '' })
 const creating = ref(false)
 const createError = ref<string | null>(null)
+const enableRegistration = ref(false)
+
+onMounted(async () => {
+  try {
+    const cfg = await authApi.fetchPublicConfig()
+    enableRegistration.value = cfg.allowUserCreation === true
+  } catch {
+    enableRegistration.value = false
+  }
+})
 
 async function submitLogin() {
   errorMessage.value = null
@@ -55,8 +65,6 @@ async function submitCreate() {
     creating.value = false
   }
 }
-
-const enableRegistration = computed(() => import.meta.env.DEV)
 </script>
 
 <template>
