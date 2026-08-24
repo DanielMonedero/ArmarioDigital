@@ -9,20 +9,15 @@ WORKDIR /workspace
 # Install dependencies first to cache the layer.
 COPY package.json package-lock.json* ./
 RUN npm ci
-# Some NAS filesystems (notably UGOS/Btrfs volumes) drop the +x bit
-# on files when the build context is copied across mount boundaries,
-# and chmod on a symlink does not always propagate to its target on
-# those filesystems. Force +x on:
-#   1. every entry under node_modules/.bin (the npm shims)
-#   2. every JS file living in any */bin/* or */.bin/* directory
-#      (the real scripts the symlinks point to, e.g. vue-tsc.js)
-RUN find node_modules/.bin -mindepth 1 -exec chmod +x {} + 2>/dev/null || true
-RUN find node_modules -type f -name '*.js' \( -path '*/bin/*' -o -path '*/.bin/*' \) -exec chmod +x {} + 2>/dev/null || true
 
-# Build the SPA. VITE_API_BASE_URL is empty by default, so calls hit
-# relative paths ("/api/...") which nginx will proxy to the backend.
 COPY . .
-RUN npm run build
+# Invoke vue-tsc and vite through node directly. The standard
+# 'npm run build' relies on the +x bit of node_modules/.bin entries,
+# but on some NAS filesystems (UGOS/Btrfs volumes) npm-installed
+# scripts come out without it and 'sh: vue-tsc: Permission denied'
+# fails the build. Calling the JS entry point with node bypasses
+# the executable-bit requirement entirely.
+RUN node ./node_modules/vue-tsc/bin/vue-tsc.js -b && node ./node_modules/vite/bin/vite.js build
 
 # ---- Runtime stage ----
 FROM nginx:1.27-alpine
