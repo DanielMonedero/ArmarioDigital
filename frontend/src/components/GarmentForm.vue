@@ -3,15 +3,25 @@ import { computed, reactive, watch } from 'vue'
 import {
   CATEGORIES,
   CATEGORY_LABELS,
+  COLORS,
+  COLOR_HEX,
+  COLOR_LABELS,
   CONDITION_LABELS,
   GARMENT_CONDITIONS,
   GARMENT_STATUSES,
+  SEASONS,
+  SEASON_LABELS,
   STATUS_LABELS,
+  SUBCATEGORY_LABELS,
+  subcategoriesFor,
   type Category,
+  type Color,
   type GarmentCondition,
   type GarmentCreateRequest,
   type GarmentStatus,
-  type GarmentUpdateRequest
+  type GarmentUpdateRequest,
+  type Season,
+  type Subcategory
 } from '@/types/api'
 import { fieldErrorFor, humanizeFieldName } from '@/utils/errors'
 
@@ -20,10 +30,12 @@ interface FormState {
   description: string
   size: string
   category: Category
-  color: string
+  subcategory: Subcategory | null
+  color: Color | null
   brand: string
   condition: GarmentCondition
   status: GarmentStatus
+  season: Season
   salePrice: string | number | null
   purchasePrice: string | number | null
   notes: string
@@ -52,11 +64,13 @@ function emptyState(): FormState {
     name: '',
     description: '',
     size: '',
-    category: 'T_SHIRT',
-    color: '',
+    category: 'TOP',
+    subcategory: null,
+    color: null,
     brand: '',
     condition: 'GOOD',
     status: 'WARDROBE',
+    season: 'SUMMER',
     salePrice: '',
     purchasePrice: '',
     notes: ''
@@ -70,11 +84,13 @@ function hydrate() {
     name: props.initial.name ?? '',
     description: props.initial.description ?? '',
     size: props.initial.size ?? '',
-    category: props.initial.category ?? 'T_SHIRT',
-    color: props.initial.color ?? '',
+    category: props.initial.category ?? 'TOP',
+    subcategory: (props.initial.subcategory ?? null) as Subcategory | null,
+    color: (props.initial.color ?? null) as Color | null,
     brand: props.initial.brand ?? '',
     condition: props.initial.condition ?? 'GOOD',
     status: props.initial.status ?? 'WARDROBE',
+    season: props.initial.season ?? 'SUMMER',
     salePrice: props.initial.salePrice != null ? String(props.initial.salePrice) : '',
     purchasePrice: props.initial.purchasePrice != null ? String(props.initial.purchasePrice) : '',
     notes: props.initial.notes ?? ''
@@ -83,11 +99,18 @@ function hydrate() {
 
 watch(() => props.initial, hydrate, { immediate: true, deep: true })
 
+// Reset subcategory when category changes to an incompatible parent.
+watch(
+  () => form.category,
+  (newCat) => {
+    if (form.subcategory && !subcategoriesFor(newCat).includes(form.subcategory)) {
+      form.subcategory = null
+    }
+  }
+)
+
 const errorByField = (field: string): string | undefined => {
-  const direct = fieldErrorFor(props.error, field)
-  if (direct) return direct
-  // Backend uses "salePrice" — we keep the same key but show a friendlier label.
-  return undefined
+  return fieldErrorFor(props.error, field)
 }
 
 const formErrorMessage = computed(() => {
@@ -99,6 +122,10 @@ const formErrorMessage = computed(() => {
 
 const statusOptions = computed(() =>
   GARMENT_STATUSES.filter((s) => s !== 'SOLD')
+)
+
+const availableSubcategories = computed<readonly Subcategory[]>(() =>
+  subcategoriesFor(form.category)
 )
 
 function toNumberOrNull(value: unknown): number | null {
@@ -117,10 +144,12 @@ function onSubmit(event: Event) {
     description: form.description.trim() || null,
     size: form.size.trim(),
     category: form.category,
-    color: form.color.trim() || null,
+    subcategory: form.subcategory,
+    color: form.color,
     brand: form.brand.trim() || null,
     condition: form.condition,
     status: form.status,
+    season: form.season,
     salePrice: toNumberOrNull(form.salePrice),
     purchasePrice: toNumberOrNull(form.purchasePrice),
     notes: form.notes.trim() || null
@@ -167,6 +196,63 @@ function onSubmit(event: Event) {
       </div>
 
       <div class="field">
+        <label class="field__label" for="g-subcategory">Subcategoría</label>
+        <select
+          id="g-subcategory"
+          v-model="form.subcategory"
+          class="select"
+          :class="{ 'input--error': errorByField('subcategory') }"
+        >
+          <option :value="null">Sin subcategoría</option>
+          <option v-for="s in availableSubcategories" :key="s" :value="s">
+            {{ SUBCATEGORY_LABELS[s] }}
+          </option>
+        </select>
+        <span v-if="errorByField('subcategory')" class="field__error">{{ errorByField('subcategory') }}</span>
+      </div>
+
+      <div class="field">
+        <label class="field__label">Color</label>
+        <div class="color-picker" role="radiogroup" aria-label="Color">
+          <button
+            v-for="c in COLORS"
+            :key="c"
+            type="button"
+            role="radio"
+            :aria-checked="form.color === c"
+            :title="COLOR_LABELS[c]"
+            class="color-picker__swatch"
+            :class="{ 'color-picker__swatch--active': form.color === c }"
+            :style="{ background: COLOR_HEX[c] }"
+            @click="form.color = form.color === c ? null : c"
+          />
+        </div>
+        <span class="color-picker__label subtle">
+          {{ form.color ? COLOR_LABELS[form.color] : 'Sin color' }}
+        </span>
+      </div>
+
+      <div class="field">
+        <label class="field__label">Temporada</label>
+        <div class="season-toggle" role="radiogroup" aria-label="Temporada">
+          <button
+            v-for="s in SEASONS"
+            :id="`g-season-${s}`"
+            :key="s"
+            type="button"
+            role="radio"
+            :aria-checked="form.season === s"
+            class="season-toggle__btn"
+            :class="{ 'season-toggle__btn--active': form.season === s }"
+            @click="form.season = s"
+          >
+            {{ SEASON_LABELS[s] }}
+          </button>
+        </div>
+        <span v-if="errorByField('season')" class="field__error">{{ errorByField('season') }}</span>
+      </div>
+
+      <div class="field">
         <label class="field__label" for="g-condition">Estado de la prenda</label>
         <select id="g-condition" v-model="form.condition" class="select">
           <option v-for="c in GARMENT_CONDITIONS" :key="c" :value="c">{{ CONDITION_LABELS[c] }}</option>
@@ -196,18 +282,6 @@ function onSubmit(event: Event) {
           maxlength="120"
         />
         <span v-if="errorByField('brand')" class="field__error">{{ errorByField('brand') }}</span>
-      </div>
-
-      <div class="field">
-        <label class="field__label" for="g-color">Color</label>
-        <input
-          id="g-color"
-          v-model="form.color"
-          class="input"
-          :class="{ 'input--error': errorByField('color') }"
-          maxlength="60"
-        />
-        <span v-if="errorByField('color')" class="field__error">{{ errorByField('color') }}</span>
       </div>
 
       <div class="field">
@@ -314,5 +388,62 @@ function onSubmit(event: Event) {
   display: flex;
   justify-content: flex-end;
   gap: var(--space-2);
+}
+
+.color-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.color-picker__swatch {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid var(--color-border);
+  cursor: pointer;
+  padding: 0;
+  transition: transform var(--transition-base), border-color var(--transition-base);
+}
+
+.color-picker__swatch:hover {
+  transform: scale(1.08);
+}
+
+.color-picker__swatch--active {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-soft);
+}
+
+.color-picker__label {
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+.season-toggle {
+  display: inline-flex;
+  gap: 4px;
+  background: var(--color-surface-muted);
+  padding: 4px;
+  border-radius: var(--radius-md);
+  width: fit-content;
+}
+
+.season-toggle__btn {
+  border: 0;
+  background: transparent;
+  padding: 6px 14px;
+  border-radius: calc(var(--radius-md) - 4px);
+  cursor: pointer;
+  font-size: 0.92rem;
+  color: var(--color-text-muted);
+  transition: background var(--transition-base), color var(--transition-base);
+}
+
+.season-toggle__btn--active {
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-soft);
 }
 </style>

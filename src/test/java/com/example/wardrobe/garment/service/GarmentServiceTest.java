@@ -8,9 +8,12 @@ import com.example.wardrobe.common.exception.NotFoundException;
 import com.example.wardrobe.description.DescriptionGenerator;
 import com.example.wardrobe.garment.dto.GarmentCreateRequest;
 import com.example.wardrobe.garment.entity.Category;
+import com.example.wardrobe.garment.entity.Color;
 import com.example.wardrobe.garment.entity.Garment;
 import com.example.wardrobe.garment.entity.GarmentCondition;
 import com.example.wardrobe.garment.entity.GarmentStatus;
+import com.example.wardrobe.garment.entity.Season;
+import com.example.wardrobe.garment.entity.Subcategory;
 import com.example.wardrobe.garment.repository.GarmentRepository;
 import com.example.wardrobe.image.entity.GarmentImage;
 import com.example.wardrobe.image.repository.GarmentImageRepository;
@@ -24,7 +27,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -58,8 +60,8 @@ class GarmentServiceTest {
     @Test
     void createStoresGarmentOwnedByCurrentUser() {
         GarmentCreateRequest request = new GarmentCreateRequest(
-                "Camiseta", null, "M", Category.T_SHIRT, "Azul", "Nike",
-                GarmentCondition.GOOD, GarmentStatus.WARDROBE, null, null, null
+                "Camiseta", null, "M", Category.TOP, Subcategory.T_SHIRT, Color.BLUE, "Nike",
+                GarmentCondition.GOOD, GarmentStatus.WARDROBE, Season.SUMMER, null, null, null
         );
         when(garmentRepository.save(any(Garment.class))).thenAnswer(inv -> {
             Garment g = inv.getArgument(0);
@@ -77,8 +79,8 @@ class GarmentServiceTest {
     @Test
     void createWithForSaleRequiresSalePrice() {
         GarmentCreateRequest request = new GarmentCreateRequest(
-                "Camiseta", null, "M", Category.T_SHIRT, "Azul", "Nike",
-                GarmentCondition.GOOD, GarmentStatus.FOR_SALE, null, null, null
+                "Camiseta", null, "M", Category.TOP, Subcategory.T_SHIRT, Color.BLUE, "Nike",
+                GarmentCondition.GOOD, GarmentStatus.FOR_SALE, Season.SUMMER, null, null, null
         );
         assertThatThrownBy(() -> service.create(1L, request))
                 .isInstanceOf(BadRequestException.class)
@@ -88,11 +90,23 @@ class GarmentServiceTest {
     @Test
     void createAsSoldIsRejected() {
         GarmentCreateRequest request = new GarmentCreateRequest(
-                "Camiseta", null, "M", Category.T_SHIRT, "Azul", "Nike",
-                GarmentCondition.GOOD, GarmentStatus.SOLD, new BigDecimal("10.00"), null, null
+                "Camiseta", null, "M", Category.TOP, Subcategory.T_SHIRT, Color.BLUE, "Nike",
+                GarmentCondition.GOOD, GarmentStatus.SOLD, Season.SUMMER,
+                new BigDecimal("10.00"), null, null
         );
         assertThatThrownBy(() -> service.create(1L, request))
                 .isInstanceOf(BadRequestException.class);
+    }
+
+    @Test
+    void createWithMismatchedSubcategoryIsRejected() {
+        GarmentCreateRequest request = new GarmentCreateRequest(
+                "Jeans", null, "32", Category.TOP, Subcategory.JEANS, Color.BLUE, null,
+                GarmentCondition.GOOD, GarmentStatus.WARDROBE, Season.WINTER, null, null, null
+        );
+        assertThatThrownBy(() -> service.create(1L, request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Subcategory");
     }
 
     @Test
@@ -122,12 +136,12 @@ class GarmentServiceTest {
         Garment garment = wardrobeWithSalePrice(new BigDecimal("29.95"));
         garment.getImages().add(image(garment));
         when(garmentRepository.findByIdAndOwnerId(10L, 1L)).thenReturn(Optional.of(garment));
-        when(descriptionGenerator.generate(any())).thenReturn("Camiseta Nike azul, talla M. En buen estado.");
+        when(descriptionGenerator.generate(any())).thenReturn("Camiseta Nike blue, talla M. En buen estado.");
 
         var response = service.putForSale(1L, 10L);
 
         assertThat(response.status()).isEqualTo(GarmentStatus.FOR_SALE);
-        assertThat(garment.getDescription()).isEqualTo("Camiseta Nike azul, talla M. En buen estado.");
+        assertThat(garment.getDescription()).isEqualTo("Camiseta Nike blue, talla M. En buen estado.");
         verify(descriptionGenerator).generate(garment);
     }
 
@@ -203,9 +217,12 @@ class GarmentServiceTest {
         g.setOwner(owner);
         g.setName("Camiseta");
         g.setSize("M");
-        g.setCategory(Category.T_SHIRT);
+        g.setCategory(Category.TOP);
+        g.setSubcategory(Subcategory.T_SHIRT);
+        g.setColor(Color.BLUE);
         g.setCondition(GarmentCondition.GOOD);
         g.setStatus(GarmentStatus.WARDROBE);
+        g.setSeason(Season.SUMMER);
         g.setImages(new ArrayList<>());
         return g;
     }

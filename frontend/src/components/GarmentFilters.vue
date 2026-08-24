@@ -3,10 +3,20 @@ import { computed, ref } from 'vue'
 import {
   CATEGORIES,
   CATEGORY_LABELS,
+  COLOR_HEX,
+  COLOR_LABELS,
+  COLORS,
   CONDITION_LABELS,
   GARMENT_CONDITIONS,
+  SEASON_LABELS,
+  SEASONS,
+  SUBCATEGORY_LABELS,
+  subcategoriesFor,
   type Category,
-  type GarmentCondition
+  type Color,
+  type GarmentCondition,
+  type Season,
+  type Subcategory
 } from '@/types/api'
 import type { Filters } from '@/composables/filters'
 import { emptyFilters } from '@/composables/filters'
@@ -36,7 +46,12 @@ const local = computed<Filters>({
 })
 
 function update<K extends keyof Filters>(key: K, value: Filters[K]) {
-  emit('update:modelValue', { ...local.value, [key]: value })
+  const next: Filters = { ...local.value, [key]: value }
+  // Reset subcategory when category changes so we don't keep an orphan filter.
+  if (key === 'category') {
+    next.subcategory = ''
+  }
+  emit('update:modelValue', next)
 }
 
 function commitSearch() {
@@ -49,11 +64,23 @@ function reset() {
   emit('reset')
 }
 
+const availableSubcategories = computed<readonly Subcategory[]>(() => {
+  const cat = local.value.category as Category | ''
+  return cat ? subcategoriesFor(cat) : []
+})
+
 const activeCount = computed(() => {
   const v = local.value
-  return [v.search, v.category, v.condition, v.garmentSize, v.brand, v.color].filter(
-    Boolean
-  ).length
+  return [
+    v.search,
+    v.category,
+    v.subcategory,
+    v.color,
+    v.season,
+    v.condition,
+    v.garmentSize,
+    v.brand
+  ].filter(Boolean).length
 })
 </script>
 
@@ -122,6 +149,54 @@ const activeCount = computed(() => {
       </div>
 
       <div class="field">
+        <label class="field__label" for="filter-subcategory">Subcategoría</label>
+        <select
+          id="filter-subcategory"
+          class="select"
+          :value="local.subcategory"
+          :disabled="!local.category"
+          @change="update('subcategory', ($event.target as HTMLSelectElement).value as Subcategory | '')"
+        >
+          <option value="">{{ local.category ? 'Cualquiera' : 'Elige categoría' }}</option>
+          <option v-for="s in availableSubcategories" :key="s" :value="s">
+            {{ SUBCATEGORY_LABELS[s] }}
+          </option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="filter-color">Color</label>
+        <select
+          id="filter-color"
+          class="select"
+          :value="local.color"
+          @change="update('color', ($event.target as HTMLSelectElement).value as Color | '')"
+        >
+          <option value="">Cualquiera</option>
+          <option v-for="c in COLORS" :key="c" :value="c">
+            {{ COLOR_LABELS[c] }}
+          </option>
+        </select>
+        <span v-if="local.color" class="color-swatch" aria-hidden="true">
+          <span class="color-swatch__dot" :style="{ background: COLOR_HEX[local.color as Color] }" />
+          <span class="color-swatch__label">{{ COLOR_LABELS[local.color as Color] }}</span>
+        </span>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="filter-season">Temporada</label>
+        <select
+          id="filter-season"
+          class="select"
+          :value="local.season"
+          @change="update('season', ($event.target as HTMLSelectElement).value as Season | '')"
+        >
+          <option value="">Cualquiera</option>
+          <option v-for="s in SEASONS" :key="s" :value="s">{{ SEASON_LABELS[s] }}</option>
+        </select>
+      </div>
+
+      <div class="field">
         <label class="field__label" for="filter-condition">Estado</label>
         <select
           id="filter-condition"
@@ -154,17 +229,6 @@ const activeCount = computed(() => {
           :value="local.brand"
           maxlength="120"
           @input="update('brand', ($event.target as HTMLInputElement).value)"
-        />
-      </div>
-
-      <div class="field">
-        <label class="field__label" for="filter-color">Color</label>
-        <input
-          id="filter-color"
-          class="input"
-          :value="local.color"
-          maxlength="60"
-          @input="update('color', ($event.target as HTMLInputElement).value)"
         />
       </div>
     </div>
@@ -247,5 +311,22 @@ const activeCount = computed(() => {
   .filters__panel {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+}
+
+.color-swatch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+.color-swatch__dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  display: inline-block;
 }
 </style>

@@ -1,8 +1,42 @@
-import type { GarmentCondition, GarmentStatus, Category } from '@/types/api'
-import { CATEGORY_LABELS, CONDITION_LABELS, STATUS_LABELS } from '@/types/api'
+import type {
+  Category,
+  Color,
+  GarmentCondition,
+  GarmentStatus,
+  Season,
+  Subcategory
+} from '@/types/api'
+import {
+  CATEGORY_LABELS,
+  COLOR_LABELS,
+  COLOR_HEX,
+  CONDITION_LABELS,
+  SEASON_LABELS,
+  STATUS_LABELS,
+  SUBCATEGORY_LABELS
+} from '@/types/api'
 
 export function formatCategory(value: Category): string {
   return CATEGORY_LABELS[value] ?? value
+}
+
+export function formatSubcategory(value: Subcategory | null | undefined): string {
+  if (!value) return ''
+  return SUBCATEGORY_LABELS[value] ?? value
+}
+
+export function formatColor(value: Color | null | undefined): string {
+  if (!value) return ''
+  return COLOR_LABELS[value] ?? value
+}
+
+export function colorHex(value: Color | null | undefined): string {
+  if (!value) return 'transparent'
+  return COLOR_HEX[value]
+}
+
+export function formatSeason(value: Season): string {
+  return SEASON_LABELS[value] ?? value
 }
 
 export function formatCondition(value: GarmentCondition): string {

@@ -11,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,11 +33,13 @@ class GarmentIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<JsonNode> response = client.postJson("/api/garments", Map.of(
                 "name", name,
                 "size", "M",
-                "category", "T_SHIRT",
+                "category", "TOP",
+                "subcategory", "T_SHIRT",
+                "color", "BLUE",
                 "condition", "GOOD",
                 "status", status,
+                "season", "SUMMER",
                 "salePrice", new BigDecimal("19.99"),
-                "color", "Azul",
                 "brand", "Nike"
         ));
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -51,13 +52,19 @@ class GarmentIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<JsonNode> response = client.postJson("/api/garments", Map.of(
                 "name", "Camiseta",
                 "size", "M",
-                "category", "T_SHIRT",
+                "category", "TOP",
+                "subcategory", "T_SHIRT",
+                "color", "RED",
                 "condition", "GOOD",
-                "status", "WARDROBE"
+                "status", "WARDROBE",
+                "season", "SUMMER"
         ));
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(response.getBody().get("name").asText()).isEqualTo("Camiseta");
         assertThat(response.getBody().get("status").asText()).isEqualTo("WARDROBE");
+        assertThat(response.getBody().get("subcategory").asText()).isEqualTo("T_SHIRT");
+        assertThat(response.getBody().get("color").asText()).isEqualTo("RED");
+        assertThat(response.getBody().get("season").asText()).isEqualTo("SUMMER");
     }
 
     @Test
@@ -65,12 +72,43 @@ class GarmentIntegrationTest extends AbstractIntegrationTest {
         ApiClient client = newUser("bob_" + System.nanoTime());
         ResponseEntity<JsonNode> response = client.postJson("/api/garments", Map.of(
                 "size", "M",
-                "category", "T_SHIRT",
+                "category", "TOP",
+                "condition", "GOOD",
+                "status", "WARDROBE",
+                "season", "SUMMER"
+        ));
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().get("fieldErrors").get("name")).isNotNull();
+    }
+
+    @Test
+    void rejectsCreationWithMissingSeason() {
+        ApiClient client = newUser("bob2_" + System.nanoTime());
+        ResponseEntity<JsonNode> response = client.postJson("/api/garments", Map.of(
+                "name", "Camiseta",
+                "size", "M",
+                "category", "TOP",
                 "condition", "GOOD",
                 "status", "WARDROBE"
         ));
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody().get("fieldErrors").get("name")).isNotNull();
+        assertThat(response.getBody().get("fieldErrors").get("season")).isNotNull();
+    }
+
+    @Test
+    void rejectsMismatchedSubcategory() {
+        ApiClient client = newUser("bob3_" + System.nanoTime());
+        ResponseEntity<JsonNode> response = client.postJson("/api/garments", Map.of(
+                "name", "Jeans",
+                "size", "32",
+                "category", "TOP",
+                "subcategory", "JEANS",
+                "condition", "GOOD",
+                "status", "WARDROBE",
+                "season", "WINTER"
+        ));
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().get("error").asText()).isEqualTo("INVALID_SUBCATEGORY");
     }
 
     @Test
@@ -79,9 +117,11 @@ class GarmentIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<JsonNode> response = client.postJson("/api/garments", Map.of(
                 "name", "Camiseta",
                 "size", "M",
-                "category", "T_SHIRT",
+                "category", "TOP",
+                "subcategory", "T_SHIRT",
                 "condition", "GOOD",
-                "status", "FOR_SALE"
+                "status", "FOR_SALE",
+                "season", "SUMMER"
         ));
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
@@ -99,9 +139,11 @@ class GarmentIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<JsonNode> update = mallory.putJson("/api/garments/" + id, Map.of(
                 "name", "Pwned",
                 "size", "M",
-                "category", "T_SHIRT",
+                "category", "TOP",
+                "subcategory", "T_SHIRT",
                 "condition", "GOOD",
-                "status", "WARDROBE"
+                "status", "WARDROBE",
+                "season", "SUMMER"
         ));
         assertThat(update.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 
@@ -120,9 +162,11 @@ class GarmentIntegrationTest extends AbstractIntegrationTest {
         client.putJson("/api/garments/" + id, Map.of(
                 "name", "Camiseta",
                 "size", "M",
-                "category", "T_SHIRT",
+                "category", "TOP",
+                "subcategory", "T_SHIRT",
                 "condition", "GOOD",
                 "status", "WARDROBE",
+                "season", "SUMMER",
                 "salePrice", new BigDecimal("15.00")
         ));
         ResponseEntity<JsonNode> response = client.postJson("/api/garments/" + id + "/put-for-sale", Map.of());
@@ -136,17 +180,17 @@ class GarmentIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<JsonNode> created = client.postJson("/api/garments", Map.of(
                 "name", "Camiseta",
                 "size", "M",
-                "category", "T_SHIRT",
+                "category", "TOP",
+                "subcategory", "T_SHIRT",
+                "color", "BLUE",
                 "condition", "GOOD",
                 "status", "WARDROBE",
-                "color", "Azul",
+                "season", "SUMMER",
                 "brand", "Nike",
                 "salePrice", new BigDecimal("19.99")
         ));
         Long id = created.getBody().get("id").asLong();
 
-        // Upload one image (handled in image integration test, simulate via direct DB call is overkill;
-        // we just upload via the image endpoint to allow transitions)
         org.springframework.http.HttpEntity<org.springframework.core.io.Resource> imageEntity =
                 uploadTestImage(client, id, "image/jpeg", ".jpg");
 
@@ -155,7 +199,7 @@ class GarmentIntegrationTest extends AbstractIntegrationTest {
         assertThat(putForSale.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(putForSale.getBody().get("status").asText()).isEqualTo("FOR_SALE");
         assertThat(putForSale.getBody().get("description").asText())
-                .isEqualTo("Camiseta Nike azul, talla M. En buen estado.");
+                .isEqualTo("Camiseta Nike blue, talla M. En buen estado.");
 
         ResponseEntity<JsonNode> sold = client.postJson(
                 "/api/garments/" + id + "/mark-as-sold", Map.of());
@@ -172,27 +216,31 @@ class GarmentIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void filtersByCategoryAndGarmentSize() {
+    void filtersByCategoryAndSubcategory() {
         ApiClient client = newUser("frank_" + System.nanoTime());
         ResponseEntity<JsonNode> shirt = client.postJson("/api/garments", Map.of(
                 "name", "Camiseta",
                 "size", "M",
-                "category", "T_SHIRT",
+                "category", "TOP",
+                "subcategory", "T_SHIRT",
                 "condition", "GOOD",
-                "status", "WARDROBE"
+                "status", "WARDROBE",
+                "season", "SUMMER"
         ));
         ResponseEntity<JsonNode> pants = client.postJson("/api/garments", Map.of(
                 "name", "Pantalón",
                 "size", "32",
-                "category", "PANTS",
+                "category", "BOTTOM",
+                "subcategory", "JEANS",
                 "condition", "GOOD",
-                "status", "WARDROBE"
+                "status", "WARDROBE",
+                "season", "WINTER"
         ));
         Long pantsId = pants.getBody().get("id").asLong();
         Long shirtId = shirt.getBody().get("id").asLong();
 
         ResponseEntity<JsonNode> response = client.getJson(
-                "/api/garments?category=PANTS&garmentSize=32");
+                "/api/garments?category=BOTTOM&subcategory=JEANS");
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         boolean foundPants = false;
@@ -203,6 +251,42 @@ class GarmentIntegrationTest extends AbstractIntegrationTest {
         }
         assertThat(foundPants).isTrue();
         assertThat(foundShirt).isFalse();
+    }
+
+    @Test
+    void filtersByColorAndSeason() {
+        ApiClient client = newUser("frank2_" + System.nanoTime());
+        Long summerRed = client.postJson("/api/garments", Map.of(
+                "name", "Camiseta roja",
+                "size", "M",
+                "category", "TOP",
+                "subcategory", "T_SHIRT",
+                "color", "RED",
+                "condition", "GOOD",
+                "status", "WARDROBE",
+                "season", "SUMMER"
+        )).getBody().get("id").asLong();
+        Long winterBlue = client.postJson("/api/garments", Map.of(
+                "name", "Jersey azul",
+                "size", "L",
+                "category", "SWEATER",
+                "subcategory", "SWEATER",
+                "color", "BLUE",
+                "condition", "GOOD",
+                "status", "WARDROBE",
+                "season", "WINTER"
+        )).getBody().get("id").asLong();
+
+        ResponseEntity<JsonNode> redResp = client.getJson("/api/garments?color=RED&season=SUMMER");
+        assertThat(redResp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        boolean foundRed = false;
+        boolean foundBlue = false;
+        for (JsonNode n : redResp.getBody().get("content")) {
+            if (n.get("id").asLong() == summerRed) foundRed = true;
+            if (n.get("id").asLong() == winterBlue) foundBlue = true;
+        }
+        assertThat(foundRed).isTrue();
+        assertThat(foundBlue).isFalse();
     }
 
     @Test

@@ -12,9 +12,12 @@ import com.example.wardrobe.garment.dto.GarmentResponse;
 import com.example.wardrobe.garment.dto.GarmentSummaryResponse;
 import com.example.wardrobe.garment.dto.GarmentUpdateRequest;
 import com.example.wardrobe.garment.entity.Category;
+import com.example.wardrobe.garment.entity.Color;
 import com.example.wardrobe.garment.entity.Garment;
 import com.example.wardrobe.garment.entity.GarmentCondition;
 import com.example.wardrobe.garment.entity.GarmentStatus;
+import com.example.wardrobe.garment.entity.Season;
+import com.example.wardrobe.garment.entity.Subcategory;
 import com.example.wardrobe.garment.repository.GarmentRepository;
 import com.example.wardrobe.garment.repository.GarmentSpecifications;
 import com.example.wardrobe.image.entity.GarmentImage;
@@ -72,10 +75,12 @@ public class GarmentService {
         garment.setDescription(request.description());
         garment.setSize(request.size().trim());
         garment.setCategory(request.category());
-        garment.setColor(emptyToNull(request.color()));
+        garment.setSubcategory(request.subcategory());
+        garment.setColor(request.color());
         garment.setBrand(emptyToNull(request.brand()));
         garment.setCondition(request.condition());
         garment.setStatus(request.status());
+        garment.setSeason(request.season());
         garment.setSalePrice(request.salePrice());
         garment.setPurchasePrice(request.purchasePrice());
         garment.setNotes(request.notes());
@@ -96,9 +101,11 @@ public class GarmentService {
     public PageResponse<GarmentSummaryResponse> list(Long ownerId,
                                                       GarmentStatus status,
                                                       Category category,
+                                                      Subcategory subcategory,
+                                                      Color color,
+                                                      Season season,
                                                       String size,
                                                       String brand,
-                                                      String color,
                                                       GarmentCondition condition,
                                                       String search,
                                                       Pageable pageable) {
@@ -106,9 +113,11 @@ public class GarmentService {
                 .where(GarmentSpecifications.belongsToOwner(ownerId))
                 .and(GarmentSpecifications.hasStatus(status))
                 .and(GarmentSpecifications.hasCategory(category))
+                .and(GarmentSpecifications.hasSubcategory(subcategory))
+                .and(GarmentSpecifications.hasColor(color))
+                .and(GarmentSpecifications.hasSeason(season))
                 .and(GarmentSpecifications.hasSize(size))
                 .and(GarmentSpecifications.hasBrand(brand))
-                .and(GarmentSpecifications.hasColor(color))
                 .and(GarmentSpecifications.hasCondition(condition))
                 .and(GarmentSpecifications.textSearch(search));
 
@@ -185,10 +194,12 @@ public class GarmentService {
         garment.setDescription(request.description());
         garment.setSize(request.size().trim());
         garment.setCategory(request.category());
-        garment.setColor(emptyToNull(request.color()));
+        garment.setSubcategory(request.subcategory());
+        garment.setColor(request.color());
         garment.setBrand(emptyToNull(request.brand()));
         garment.setCondition(request.condition());
         garment.setStatus(request.status());
+        garment.setSeason(request.season());
         garment.setSalePrice(request.salePrice());
         garment.setPurchasePrice(request.purchasePrice());
         garment.setNotes(request.notes());
@@ -206,6 +217,10 @@ public class GarmentService {
             throw new BadRequestException("INVALID_STATUS",
                     "A new garment cannot be created as SOLD; create it and mark it as sold afterwards");
         }
+        if (request.subcategory() != null && request.subcategory().getParent() != request.category()) {
+            throw new BadRequestException("INVALID_SUBCATEGORY",
+                    "Subcategory " + request.subcategory() + " does not belong to category " + request.category());
+        }
     }
 
     private void validateForUpdate(GarmentStatus currentStatus, GarmentUpdateRequest request) {
@@ -216,6 +231,10 @@ public class GarmentService {
         if (request.status() == GarmentStatus.FOR_SALE && request.salePrice() == null) {
             throw new BadRequestException("MISSING_PRICE",
                     "Sale price is required when status is FOR_SALE");
+        }
+        if (request.subcategory() != null && request.subcategory().getParent() != request.category()) {
+            throw new BadRequestException("INVALID_SUBCATEGORY",
+                    "Subcategory " + request.subcategory() + " does not belong to category " + request.category());
         }
     }
 

@@ -1,9 +1,12 @@
 package com.example.wardrobe.garment.repository;
 
 import com.example.wardrobe.garment.entity.Category;
+import com.example.wardrobe.garment.entity.Color;
 import com.example.wardrobe.garment.entity.Garment;
 import com.example.wardrobe.garment.entity.GarmentCondition;
 import com.example.wardrobe.garment.entity.GarmentStatus;
+import com.example.wardrobe.garment.entity.Season;
+import com.example.wardrobe.garment.entity.Subcategory;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -27,6 +30,18 @@ public final class GarmentSpecifications {
         return (root, query, cb) -> category == null ? cb.conjunction() : cb.equal(root.get("category"), category);
     }
 
+    public static Specification<Garment> hasSubcategory(Subcategory subcategory) {
+        return (root, query, cb) -> subcategory == null ? cb.conjunction() : cb.equal(root.get("subcategory"), subcategory);
+    }
+
+    public static Specification<Garment> hasColor(Color color) {
+        return (root, query, cb) -> color == null ? cb.conjunction() : cb.equal(root.get("color"), color);
+    }
+
+    public static Specification<Garment> hasSeason(Season season) {
+        return (root, query, cb) -> season == null ? cb.conjunction() : cb.equal(root.get("season"), season);
+    }
+
     public static Specification<Garment> hasSize(String size) {
         return (root, query, cb) -> (size == null || size.isBlank())
                 ? cb.conjunction()
@@ -37,12 +52,6 @@ public final class GarmentSpecifications {
         return (root, query, cb) -> (brand == null || brand.isBlank())
                 ? cb.conjunction()
                 : cb.equal(cb.lower(root.get("brand")), brand.toLowerCase());
-    }
-
-    public static Specification<Garment> hasColor(String color) {
-        return (root, query, cb) -> (color == null || color.isBlank())
-                ? cb.conjunction()
-                : cb.equal(cb.lower(root.get("color")), color.toLowerCase());
     }
 
     public static Specification<Garment> hasCondition(GarmentCondition condition) {

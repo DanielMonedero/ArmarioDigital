@@ -7,10 +7,14 @@ import { ApiError } from '@/api/client'
 import type { Garment, GarmentUpdateRequest, ImageOrderRequest } from '@/types/api'
 import {
   formatCategory,
+  formatColor,
   formatCondition,
   formatDate,
   formatPrice,
-  formatStatus
+  formatSeason,
+  formatStatus,
+  formatSubcategory,
+  colorHex
 } from '@/utils/format'
 import { describeError } from '@/utils/errors'
 import { useToastStore } from '@/stores/toast'
@@ -176,6 +180,7 @@ const canMarkAsSold = computed(() => garment.value?.status === 'FOR_SALE')
           <p class="page__subtitle">
             <StatusBadge :status="garment.status" />
             <span class="muted"> · {{ formatCategory(garment.category) }}</span>
+            <span v-if="garment.subcategory" class="muted"> · {{ formatSubcategory(garment.subcategory) }}</span>
             <span v-if="garment.brand" class="muted"> · {{ garment.brand }}</span>
             <span v-if="garment.size" class="muted"> · Talla {{ garment.size }}</span>
           </p>
@@ -284,7 +289,22 @@ const canMarkAsSold = computed(() => garment.value?.status === 'FOR_SALE')
               </div>
               <div v-if="garment.color">
                 <dt>Color</dt>
-                <dd>{{ garment.color }}</dd>
+                <dd class="detail__color">
+                  <span
+                    class="detail__color-dot"
+                    :style="{ background: colorHex(garment.color) }"
+                    aria-hidden="true"
+                  />
+                  {{ formatColor(garment.color) }}
+                </dd>
+              </div>
+              <div>
+                <dt>Temporada</dt>
+                <dd>{{ formatSeason(garment.season) }}</dd>
+              </div>
+              <div v-if="garment.subcategory">
+                <dt>Subcategoría</dt>
+                <dd>{{ formatSubcategory(garment.subcategory) }}</dd>
               </div>
               <div v-if="garment.brand">
                 <dt>Marca</dt>
@@ -437,6 +457,20 @@ const canMarkAsSold = computed(() => garment.value?.status === 'FOR_SALE')
   margin: 0;
   font-size: 0.92rem;
   color: var(--color-text);
+}
+
+.detail__color {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.detail__color-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  display: inline-block;
 }
 
 .detail__notes h3 {

@@ -7,8 +7,11 @@ import com.example.wardrobe.garment.dto.GarmentResponse;
 import com.example.wardrobe.garment.dto.GarmentSummaryResponse;
 import com.example.wardrobe.garment.dto.GarmentUpdateRequest;
 import com.example.wardrobe.garment.entity.Category;
+import com.example.wardrobe.garment.entity.Color;
 import com.example.wardrobe.garment.entity.GarmentCondition;
 import com.example.wardrobe.garment.entity.GarmentStatus;
+import com.example.wardrobe.garment.entity.Season;
+import com.example.wardrobe.garment.entity.Subcategory;
 import com.example.wardrobe.garment.service.GarmentService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
@@ -41,15 +44,18 @@ public class GarmentController {
             Authentication authentication,
             @RequestParam(required = false) GarmentStatus status,
             @RequestParam(required = false) Category category,
+            @RequestParam(required = false) Subcategory subcategory,
+            @RequestParam(required = false) Color color,
+            @RequestParam(required = false) Season season,
             @RequestParam(name = "garmentSize", required = false) String garmentSize,
             @RequestParam(required = false) String brand,
-            @RequestParam(required = false) String color,
             @RequestParam(required = false) GarmentCondition condition,
             @RequestParam(required = false) String search,
             @PageableDefault(size = 20) Pageable pageable
     ) {
         Long ownerId = currentUserId(authentication);
-        return garmentService.list(ownerId, status, category, garmentSize, brand, color, condition, search, pageable);
+        return garmentService.list(ownerId, status, category, subcategory, color, season,
+                garmentSize, brand, condition, search, pageable);
     }
 
     @PostMapping

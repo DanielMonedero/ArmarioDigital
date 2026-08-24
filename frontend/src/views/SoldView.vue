@@ -17,18 +17,22 @@ const filters = computed({
   get: (): Filters => ({
     search: params.search ?? '',
     category: params.category ?? '',
+    subcategory: params.subcategory ?? '',
+    color: params.color ?? '',
+    season: params.season ?? '',
     condition: params.condition ?? '',
     garmentSize: params.garmentSize ?? '',
-    brand: params.brand ?? '',
-    color: params.color ?? ''
+    brand: params.brand ?? ''
   }),
   set: (value: Filters) => {
     params.search = value.search || undefined
     params.category = (value.category || undefined) as typeof params.category
+    params.subcategory = (value.subcategory || undefined) as typeof params.subcategory
+    params.color = (value.color || undefined) as typeof params.color
+    params.season = (value.season || undefined) as typeof params.season
     params.condition = (value.condition || undefined) as typeof params.condition
     params.garmentSize = value.garmentSize || undefined
     params.brand = value.brand || undefined
-    params.color = value.color || undefined
   }
 })
 </script>

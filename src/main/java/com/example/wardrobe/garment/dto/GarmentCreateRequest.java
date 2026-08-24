@@ -1,8 +1,11 @@
 package com.example.wardrobe.garment.dto;
 
 import com.example.wardrobe.garment.entity.Category;
+import com.example.wardrobe.garment.entity.Color;
 import com.example.wardrobe.garment.entity.GarmentCondition;
 import com.example.wardrobe.garment.entity.GarmentStatus;
+import com.example.wardrobe.garment.entity.Season;
+import com.example.wardrobe.garment.entity.Subcategory;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -25,8 +28,9 @@ public record GarmentCreateRequest(
         @NotNull(message = "Category is required")
         Category category,
 
-        @Size(max = 60, message = "Color must be at most 60 characters")
-        String color,
+        Subcategory subcategory,
+
+        Color color,
 
         @Size(max = 120, message = "Brand must be at most 120 characters")
         String brand,
@@ -36,6 +40,9 @@ public record GarmentCreateRequest(
 
         @NotNull(message = "Status is required")
         GarmentStatus status,
+
+        @NotNull(message = "Season is required")
+        Season season,
 
         @DecimalMin(value = "0.00", inclusive = true, message = "Sale price must be >= 0")
         BigDecimal salePrice,

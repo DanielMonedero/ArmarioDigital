@@ -6,20 +6,74 @@ export type GarmentStatus = 'WARDROBE' | 'FOR_SALE' | 'SOLD'
 export type GarmentCondition = 'NEW' | 'LIKE_NEW' | 'GOOD' | 'USED'
 
 export type Category =
-  | 'T_SHIRT'
-  | 'SHIRT'
+  | 'TOP'
   | 'SWEATER'
-  | 'HOODIE'
-  | 'JACKET'
-  | 'COAT'
-  | 'DRESS'
-  | 'PANTS'
-  | 'JEANS'
-  | 'SHORTS'
+  | 'OUTERWEAR'
+  | 'BOTTOM'
   | 'SKIRT'
+  | 'DRESS'
   | 'SHOES'
   | 'ACCESSORIES'
   | 'OTHER'
+
+export type Subcategory =
+  // TOP
+  | 'T_SHIRT'
+  | 'SHIRT'
+  | 'POLO'
+  | 'TANK_TOP'
+  | 'BLOUSE'
+  // SWEATER
+  | 'SWEATER'
+  | 'HOODIE'
+  | 'CARDIGAN'
+  // OUTERWEAR
+  | 'JACKET'
+  | 'COAT'
+  | 'BLAZER'
+  | 'VEST'
+  // BOTTOM
+  | 'JEANS'
+  | 'CHINOS'
+  | 'DRESS_PANTS'
+  | 'JOGGERS'
+  | 'LINEN_PANTS'
+  | 'SHORTS'
+  | 'LEGGINGS'
+  // SKIRT
+  | 'MINI_SKIRT'
+  | 'MIDI_SKIRT'
+  | 'MAXI_SKIRT'
+  // DRESS
+  | 'SHORT_DRESS'
+  | 'LONG_DRESS'
+  // SHOES
+  | 'SNEAKERS'
+  | 'BOOTS'
+  | 'SANDALS'
+  | 'HEELED'
+  | 'FLATS'
+  // ACCESSORIES
+  | 'BELT'
+  | 'BAG'
+  | 'HAT'
+  | 'SCARF'
+  // OTHER
+  | 'OTHER'
+
+export type Color =
+  | 'WHITE'
+  | 'BLACK'
+  | 'GRAY'
+  | 'BEIGE'
+  | 'RED'
+  | 'ORANGE'
+  | 'YELLOW'
+  | 'GREEN'
+  | 'BLUE'
+  | 'MULTICOLOR'
+
+export type Season = 'SUMMER' | 'WINTER'
 
 export const GARMENT_STATUSES: readonly GarmentStatus[] = [
   'WARDROBE',
@@ -35,38 +89,138 @@ export const GARMENT_CONDITIONS: readonly GarmentCondition[] = [
 ] as const
 
 export const CATEGORIES: readonly Category[] = [
-  'T_SHIRT',
-  'SHIRT',
+  'TOP',
   'SWEATER',
-  'HOODIE',
-  'JACKET',
-  'COAT',
-  'DRESS',
-  'PANTS',
-  'JEANS',
-  'SHORTS',
+  'OUTERWEAR',
+  'BOTTOM',
   'SKIRT',
+  'DRESS',
   'SHOES',
   'ACCESSORIES',
   'OTHER'
 ] as const
 
-// Human-readable labels so the UI never shows T_SHIRT / FOR_SALE directly.
+export const COLORS: readonly Color[] = [
+  'WHITE',
+  'BLACK',
+  'GRAY',
+  'BEIGE',
+  'RED',
+  'ORANGE',
+  'YELLOW',
+  'GREEN',
+  'BLUE',
+  'MULTICOLOR'
+] as const
+
+export const SEASONS: readonly Season[] = ['SUMMER', 'WINTER'] as const
+
+// Map of category → allowed subcategories. Mirrors the backend enum.
+export const SUBCATEGORY_BY_CATEGORY: Record<Category, readonly Subcategory[]> = {
+  TOP: ['T_SHIRT', 'SHIRT', 'POLO', 'TANK_TOP', 'BLOUSE'],
+  SWEATER: ['SWEATER', 'HOODIE', 'CARDIGAN'],
+  OUTERWEAR: ['JACKET', 'COAT', 'BLAZER', 'VEST'],
+  BOTTOM: ['JEANS', 'CHINOS', 'DRESS_PANTS', 'JOGGERS', 'LINEN_PANTS', 'SHORTS', 'LEGGINGS'],
+  SKIRT: ['MINI_SKIRT', 'MIDI_SKIRT', 'MAXI_SKIRT'],
+  DRESS: ['SHORT_DRESS', 'LONG_DRESS'],
+  SHOES: ['SNEAKERS', 'BOOTS', 'SANDALS', 'HEELED', 'FLATS'],
+  ACCESSORIES: ['BELT', 'BAG', 'HAT', 'SCARF'],
+  OTHER: ['OTHER']
+}
+
+export function subcategoriesFor(category: Category): readonly Subcategory[] {
+  return SUBCATEGORY_BY_CATEGORY[category]
+}
+
+// Human-readable labels so the UI never shows enum names directly.
 export const CATEGORY_LABELS: Record<Category, string> = {
-  T_SHIRT: 'Camiseta',
-  SHIRT: 'Camisa',
-  SWEATER: 'Jersey',
-  HOODIE: 'Sudadera',
-  JACKET: 'Chaqueta',
-  COAT: 'Abrigo',
-  DRESS: 'Vestido',
-  PANTS: 'Pantalón',
-  JEANS: 'Vaqueros',
-  SHORTS: 'Pantalón corto',
+  TOP: 'Parte de arriba',
+  SWEATER: 'Jersey / sudadera',
+  OUTERWEAR: 'Abrigo / chaqueta',
+  BOTTOM: 'Pantalón',
   SKIRT: 'Falda',
+  DRESS: 'Vestido',
   SHOES: 'Zapatos',
   ACCESSORIES: 'Accesorios',
   OTHER: 'Otro'
+}
+
+export const SUBCATEGORY_LABELS: Record<Subcategory, string> = {
+  // TOP
+  T_SHIRT: 'Camiseta',
+  SHIRT: 'Camisa',
+  POLO: 'Polo',
+  TANK_TOP: 'Camiseta tirantes',
+  BLOUSE: 'Blusa',
+  // SWEATER
+  SWEATER: 'Jersey',
+  HOODIE: 'Sudadera',
+  CARDIGAN: 'Cárdigan',
+  // OUTERWEAR
+  JACKET: 'Chaqueta',
+  COAT: 'Abrigo',
+  BLAZER: 'Blazer',
+  VEST: 'Chaleco',
+  // BOTTOM
+  JEANS: 'Vaqueros',
+  CHINOS: 'Chinos',
+  DRESS_PANTS: 'Pantalón de vestir',
+  JOGGERS: 'Pantalón de chándal',
+  LINEN_PANTS: 'Pantalón de lino',
+  SHORTS: 'Pantalón corto',
+  LEGGINGS: 'Mallas',
+  // SKIRT
+  MINI_SKIRT: 'Mini falda',
+  MIDI_SKIRT: 'Falda midi',
+  MAXI_SKIRT: 'Falda larga',
+  // DRESS
+  SHORT_DRESS: 'Vestido corto',
+  LONG_DRESS: 'Vestido largo',
+  // SHOES
+  SNEAKERS: 'Zapatillas',
+  BOOTS: 'Botas',
+  SANDALS: 'Sandalias',
+  HEELED: 'Tacón',
+  FLATS: 'Bailarinas',
+  // ACCESSORIES
+  BELT: 'Cinturón',
+  BAG: 'Bolso',
+  HAT: 'Sombrero',
+  SCARF: 'Bufanda',
+  // OTHER
+  OTHER: 'Otro'
+}
+
+export const COLOR_LABELS: Record<Color, string> = {
+  WHITE: 'Blanco',
+  BLACK: 'Negro',
+  GRAY: 'Gris',
+  BEIGE: 'Beige',
+  RED: 'Rojo',
+  ORANGE: 'Naranja',
+  YELLOW: 'Amarillo',
+  GREEN: 'Verde',
+  BLUE: 'Azul',
+  MULTICOLOR: 'Multicolor'
+}
+
+// Hex values for UI swatches.
+export const COLOR_HEX: Record<Color, string> = {
+  WHITE: '#f4f4f4',
+  BLACK: '#1a1a1a',
+  GRAY: '#8a8a8a',
+  BEIGE: '#e3d5b8',
+  RED: '#c83a3a',
+  ORANGE: '#e8843a',
+  YELLOW: '#e8c53a',
+  GREEN: '#5fa84a',
+  BLUE: '#3a78c8',
+  MULTICOLOR: 'linear-gradient(135deg, #c83a3a 0 25%, #e8c53a 25% 50%, #5fa84a 50% 75%, #3a78c8 75%)'
+}
+
+export const SEASON_LABELS: Record<Season, string> = {
+  SUMMER: 'Verano',
+  WINTER: 'Invierno'
 }
 
 export const CONDITION_LABELS: Record<GarmentCondition, string> = {
@@ -120,10 +274,12 @@ export interface GarmentSummary {
   name: string
   size: string
   category: Category
-  color: string | null
+  subcategory: Subcategory | null
+  color: Color | null
   brand: string | null
   condition: GarmentCondition
   status: GarmentStatus
+  season: Season
   salePrice: number | null
   coverImageId: string | null
   createdAt: string
@@ -136,10 +292,12 @@ export interface Garment {
   description: string | null
   size: string
   category: Category
-  color: string | null
+  subcategory: Subcategory | null
+  color: Color | null
   brand: string | null
   condition: GarmentCondition
   status: GarmentStatus
+  season: Season
   salePrice: number | null
   purchasePrice: number | null
   notes: string | null
@@ -154,10 +312,12 @@ export interface GarmentCreateRequest {
   description?: string | null
   size: string
   category: Category
-  color?: string | null
+  subcategory?: Subcategory | null
+  color?: Color | null
   brand?: string | null
   condition: GarmentCondition
   status: GarmentStatus
+  season: Season
   salePrice?: number | null
   purchasePrice?: number | null
   notes?: string | null
@@ -168,10 +328,12 @@ export interface GarmentUpdateRequest {
   description?: string | null
   size: string
   category: Category
-  color?: string | null
+  subcategory?: Subcategory | null
+  color?: Color | null
   brand?: string | null
   condition: GarmentCondition
   status: GarmentStatus
+  season: Season
   salePrice?: number | null
   purchasePrice?: number | null
   notes?: string | null
@@ -203,9 +365,11 @@ export interface ErrorResponse {
 export interface GarmentListParams {
   status?: GarmentStatus
   category?: Category
+  subcategory?: Subcategory
+  color?: Color
+  season?: Season
   garmentSize?: string
   brand?: string
-  color?: string
   condition?: GarmentCondition
   search?: string
   page?: number
@@ -223,6 +387,7 @@ export type ApiErrorCode =
   | 'CONFLICT'
   | 'USERNAME_TAKEN'
   | 'INVALID_TRANSITION'
+  | 'INVALID_SUBCATEGORY'
   | 'MISSING_IMAGE'
   | 'MISSING_PRICE'
   | 'INVALID_STATUS'

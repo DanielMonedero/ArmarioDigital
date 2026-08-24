@@ -172,10 +172,12 @@ scripts y las notas de arquitectura.
 ```
 GET /api/garments
   ?status=FOR_SALE            # WARDROBE | FOR_SALE | SOLD
-  &category=PANTS             # uno de los valores del enum Category
+  &category=BOTTOM            # uno de Category (TOP, SWEATER, OUTERWEAR, BOTTOM, SKIRT, DRESS, SHOES, ACCESSORIES, OTHER)
+  &subcategory=JEANS          # uno de Subcategory; debe pertenecer a la categoría elegida
+  &color=BLUE                 # uno de los 10 valores fijos del enum Color
+  &season=SUMMER              # SUMMER | WINTER
   &garmentSize=M              # texto libre, igualdad sin distinguir mayúsculas
   &brand=Nike                 # igualdad sin distinguir mayúsculas
-  &color=Azul                 # igualdad sin distinguir mayúsculas
   &condition=GOOD             # NEW | LIKE_NEW | GOOD | USED
   &search=camiseta            # coincide con name / brand / description
   &page=0
@@ -207,7 +209,12 @@ Nunca se devuelven stack traces al cliente.
 
 ## Reglas de dominio
 
-- Una prenda debe tener `name`, `size`, `category`, `condition`, `status`.
+- Una prenda debe tener `name`, `size`, `category`, `condition`, `status`,
+  `season`.
+- `subcategory` es opcional, pero si se indica debe pertenecer a la
+  categoría padre (p. ej. `JEANS` requiere `category=BOTTOM`; la API
+  rechaza el descuadre con `INVALID_SUBCATEGORY`).
+- `color` es opcional y está limitado a un enum de 10 valores fijos.
 - Una prenda debe tener siempre al menos una imagen.
 - `owner` es siempre el usuario autenticado. El frontend no puede elegirlo.
 - `salePrice` es obligatorio cuando el estado es `FOR_SALE`; se conserva
@@ -220,6 +227,17 @@ Nunca se devuelven stack traces al cliente.
 - `SOLD → WARDROBE` se permite y limpia `soldAt`.
 - `salePrice`, la descripción y las imágenes se conservan en las
   transiciones.
+
+### Categorías, subcategorías, colores y temporadas
+
+- **Categoría** (top-level): `TOP`, `SWEATER`, `OUTERWEAR`, `BOTTOM`,
+  `SKIRT`, `DRESS`, `SHOES`, `ACCESSORIES`, `OTHER`.
+- **Subcategoría** (enum cerrado por categoría; p. ej.
+  `BOTTOM → {JEANS, CHINOS, DRESS_PANTS, JOGGERS, LINEN_PANTS, SHORTS,
+  LEGGINGS}`).
+- **Color** (10 valores fijos): `WHITE`, `BLACK`, `GRAY`, `BEIGE`, `RED`,
+  `ORANGE`, `YELLOW`, `GREEN`, `BLUE`, `MULTICOLOR`.
+- **Temporada** (obligatoria): `SUMMER`, `WINTER`.
 
 ## Generación de descripción
 

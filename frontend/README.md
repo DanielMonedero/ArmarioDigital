@@ -134,8 +134,13 @@ La pantalla de detalle incluye:
   reservado para el parámetro `size` de paginación de Spring).
 - La descripción la genera el backend; el frontend la muestra tal cual y la
   copia al portapapeles.
-- `sizes`, marcas y categorías usan el formato del backend (`T_SHIRT`,
-  `LIKE_NEW`, etc.) pero se renderizan con etiquetas legibles.
+- Categorías, subcategorías, colores, temporadas y marcas usan el formato
+  del backend (`TOP`, `JEANS`, `BLUE`, `SUMMER`, etc.) pero se renderizan
+  con etiquetas legibles y, en el caso del color, con muestras visuales.
+- Cuando cambia la categoría en el formulario o el filtro, la subcategoría
+  se reinicia si ya no pertenece a la nueva categoría.
+- Si la API rechaza una subcategoría por no pertenecer a la categoría
+  (`INVALID_SUBCATEGORY`), el error se muestra junto al campo.
 - Las acciones destructivas (eliminar prenda, eliminar imagen) pasan por un
   `ConfirmDialog`.
 - Los errores de validación se muestran junto al campo correspondiente.

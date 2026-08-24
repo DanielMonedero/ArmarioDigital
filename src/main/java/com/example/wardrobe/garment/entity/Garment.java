@@ -52,8 +52,17 @@ public class Garment {
     @Column(nullable = false, length = 40)
     private Category category;
 
-    @Column(length = 60)
-    private String color;
+    @Enumerated(EnumType.STRING)
+    @Column(length = 40)
+    private Subcategory subcategory;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private Color color;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private Season season;
 
     @Column(length = 120)
     private String brand;
@@ -111,8 +120,14 @@ public class Garment {
     public Category getCategory() { return category; }
     public void setCategory(Category category) { this.category = category; }
 
-    public String getColor() { return color; }
-    public void setColor(String color) { this.color = color; }
+    public Subcategory getSubcategory() { return subcategory; }
+    public void setSubcategory(Subcategory subcategory) { this.subcategory = subcategory; }
+
+    public Color getColor() { return color; }
+    public void setColor(Color color) { this.color = color; }
+
+    public Season getSeason() { return season; }
+    public void setSeason(Season season) { this.season = season; }
 
     public String getBrand() { return brand; }
     public void setBrand(String brand) { this.brand = brand; }

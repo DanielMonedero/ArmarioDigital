@@ -2,6 +2,7 @@ package com.example.wardrobe.description;
 
 import com.example.wardrobe.auth.entity.User;
 import com.example.wardrobe.garment.entity.Category;
+import com.example.wardrobe.garment.entity.Color;
 import com.example.wardrobe.garment.entity.Garment;
 import com.example.wardrobe.garment.entity.GarmentCondition;
 import org.junit.jupiter.api.Test;
@@ -14,14 +15,14 @@ class TemplateDescriptionGeneratorTest {
 
     @Test
     void generatesFullDescription() {
-        Garment g = garment("Camiseta", "Nike", "Azul", "M", GarmentCondition.GOOD);
-        assertThat(generator.generate(g)).isEqualTo("Camiseta Nike azul, talla M. En buen estado.");
+        Garment g = garment("Camiseta", "Nike", Color.BLUE, "M", GarmentCondition.GOOD);
+        assertThat(generator.generate(g)).isEqualTo("Camiseta Nike blue, talla M. En buen estado.");
     }
 
     @Test
     void omitsBrandWhenMissing() {
-        Garment g = garment("Camiseta", null, "Azul", "M", GarmentCondition.GOOD);
-        assertThat(generator.generate(g)).isEqualTo("Camiseta azul, talla M. En buen estado.");
+        Garment g = garment("Camiseta", null, Color.BLUE, "M", GarmentCondition.GOOD);
+        assertThat(generator.generate(g)).isEqualTo("Camiseta blue, talla M. En buen estado.");
     }
 
     @Test
@@ -32,14 +33,14 @@ class TemplateDescriptionGeneratorTest {
 
     @Test
     void omitsSizeWhenMissing() {
-        Garment g = garment("Camiseta", "Nike", "Azul", null, GarmentCondition.GOOD);
-        assertThat(generator.generate(g)).isEqualTo("Camiseta Nike azul. En buen estado.");
+        Garment g = garment("Camiseta", "Nike", Color.BLUE, null, GarmentCondition.GOOD);
+        assertThat(generator.generate(g)).isEqualTo("Camiseta Nike blue. En buen estado.");
     }
 
     @Test
     void omitsSizeAndConditionWhenMissing() {
-        Garment g = garment("Camiseta", "Nike", "Azul", null, null);
-        assertThat(generator.generate(g)).isEqualTo("Camiseta Nike azul.");
+        Garment g = garment("Camiseta", "Nike", Color.BLUE, null, null);
+        assertThat(generator.generate(g)).isEqualTo("Camiseta Nike blue.");
     }
 
     @Test
@@ -60,11 +61,11 @@ class TemplateDescriptionGeneratorTest {
 
     @Test
     void treatsBlankOptionalsAsMissing() {
-        Garment g = garment("Camiseta", "  ", "  ", "   ", GarmentCondition.GOOD);
+        Garment g = garment("Camiseta", "  ", null, "   ", GarmentCondition.GOOD);
         assertThat(generator.generate(g)).isEqualTo("Camiseta. En buen estado.");
     }
 
-    private Garment garment(String name, String brand, String color, String size, GarmentCondition condition) {
+    private Garment garment(String name, String brand, Color color, String size, GarmentCondition condition) {
         Garment g = new Garment();
         g.setOwner(new User());
         g.setName(name);
@@ -72,8 +73,9 @@ class TemplateDescriptionGeneratorTest {
         g.setColor(color);
         g.setSize(size);
         g.setCondition(condition);
-        g.setCategory(Category.T_SHIRT);
+        g.setCategory(Category.TOP);
         g.setStatus(com.example.wardrobe.garment.entity.GarmentStatus.WARDROBE);
+        g.setSeason(com.example.wardrobe.garment.entity.Season.SUMMER);
         return g;
     }
 }

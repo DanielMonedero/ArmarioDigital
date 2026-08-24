@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import type { GarmentSummary } from '@/types/api'
+import { COLOR_HEX, COLOR_LABELS, SEASON_LABELS } from '@/types/api'
 import { formatPrice } from '@/utils/format'
 import { imageUrl } from '@/api/client'
 import StatusBadge from './StatusBadge.vue'
@@ -25,7 +26,7 @@ const price = computed(() => {
 })
 
 const subtitleParts = computed(() =>
-  [props.garment.brand, props.garment.size, props.garment.color].filter(Boolean)
+  [props.garment.brand, props.garment.size].filter(Boolean)
 )
 </script>
 
@@ -52,6 +53,17 @@ const subtitleParts = computed(() =>
         </div>
         <div v-if="garment.status !== 'WARDROBE'" class="garment-card__status">
           <StatusBadge :status="garment.status" size="sm" />
+        </div>
+        <div class="garment-card__badges">
+          <span
+            v-if="garment.color"
+            class="garment-card__color"
+            :title="COLOR_LABELS[garment.color]"
+            :style="{ background: COLOR_HEX[garment.color] }"
+          />
+          <span class="garment-card__season" :title="SEASON_LABELS[garment.season]">
+            {{ garment.season === 'SUMMER' ? '☀' : '❄' }}
+          </span>
         </div>
       </div>
       <div class="garment-card__body">
@@ -120,6 +132,32 @@ const subtitleParts = computed(() =>
   position: absolute;
   top: 10px;
   left: 10px;
+}
+
+.garment-card__badges {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  backdrop-filter: blur(2px);
+}
+
+.garment-card__color {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  display: inline-block;
+}
+
+.garment-card__season {
+  line-height: 1;
 }
 
 .garment-card__body {

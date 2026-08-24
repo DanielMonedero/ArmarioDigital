@@ -1,5 +1,14 @@
 import { computed, reactive, ref, watch } from 'vue'
-import type { GarmentListParams, GarmentStatus, PageResponse, GarmentSummary } from '@/types/api'
+import type {
+  Category,
+  GarmentCondition,
+  GarmentListParams,
+  GarmentStatus,
+  PageResponse,
+  GarmentSummary,
+  Season,
+  Subcategory
+} from '@/types/api'
 import { listGarments } from '@/api/garments'
 
 interface UseGarmentListOptions {
@@ -24,9 +33,11 @@ export function useGarmentList(options: UseGarmentListOptions = {}) {
   const params = reactive<Omit<GarmentListParams, 'page' | 'size' | 'sort' | 'status'>>({
     search: undefined,
     category: undefined,
+    subcategory: undefined,
+    color: undefined,
+    season: undefined,
     garmentSize: undefined,
     brand: undefined,
-    color: undefined,
     condition: undefined
   })
 
@@ -71,6 +82,19 @@ export function useGarmentList(options: UseGarmentListOptions = {}) {
     void load(0)
   }
 
+  // When category changes, subcategory becomes invalid (each sub belongs to a
+  // single parent). Reset it so the next request doesn't filter by an orphan.
+  watch(
+    () => params.category,
+    (newCat) => {
+      if (params.subcategory && newCat) {
+        if (!subcategoryBelongsTo(params.subcategory, newCat)) {
+          params.subcategory = undefined
+        }
+      }
+    }
+  )
+
   watch(params, reloadFromFirstPage, { deep: true })
   void load(0)
 
@@ -90,4 +114,54 @@ export function useGarmentList(options: UseGarmentListOptions = {}) {
     setPage,
     reloadFromFirstPage
   }
+}
+
+const SUBCATEGORY_PARENT: Record<Subcategory, Category> = {
+  // TOP
+  T_SHIRT: 'TOP',
+  SHIRT: 'TOP',
+  POLO: 'TOP',
+  TANK_TOP: 'TOP',
+  BLOUSE: 'TOP',
+  // SWEATER
+  SWEATER: 'SWEATER',
+  HOODIE: 'SWEATER',
+  CARDIGAN: 'SWEATER',
+  // OUTERWEAR
+  JACKET: 'OUTERWEAR',
+  COAT: 'OUTERWEAR',
+  BLAZER: 'OUTERWEAR',
+  VEST: 'OUTERWEAR',
+  // BOTTOM
+  JEANS: 'BOTTOM',
+  CHINOS: 'BOTTOM',
+  DRESS_PANTS: 'BOTTOM',
+  JOGGERS: 'BOTTOM',
+  LINEN_PANTS: 'BOTTOM',
+  SHORTS: 'BOTTOM',
+  LEGGINGS: 'BOTTOM',
+  // SKIRT
+  MINI_SKIRT: 'SKIRT',
+  MIDI_SKIRT: 'SKIRT',
+  MAXI_SKIRT: 'SKIRT',
+  // DRESS
+  SHORT_DRESS: 'DRESS',
+  LONG_DRESS: 'DRESS',
+  // SHOES
+  SNEAKERS: 'SHOES',
+  BOOTS: 'SHOES',
+  SANDALS: 'SHOES',
+  HEELED: 'SHOES',
+  FLATS: 'SHOES',
+  // ACCESSORIES
+  BELT: 'ACCESSORIES',
+  BAG: 'ACCESSORIES',
+  HAT: 'ACCESSORIES',
+  SCARF: 'ACCESSORIES',
+  // OTHER
+  OTHER: 'OTHER'
+}
+
+function subcategoryBelongsTo(sub: Subcategory, cat: Category): boolean {
+  return SUBCATEGORY_PARENT[sub] === cat
 }

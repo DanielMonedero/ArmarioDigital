@@ -1,17 +1,12 @@
 package com.example.wardrobe.garment.entity;
 
 public enum Category {
-    T_SHIRT,
-    SHIRT,
+    TOP,
     SWEATER,
-    HOODIE,
-    JACKET,
-    COAT,
-    DRESS,
-    PANTS,
-    JEANS,
-    SHORTS,
+    OUTERWEAR,
+    BOTTOM,
     SKIRT,
+    DRESS,
     SHOES,
     ACCESSORIES,
     OTHER

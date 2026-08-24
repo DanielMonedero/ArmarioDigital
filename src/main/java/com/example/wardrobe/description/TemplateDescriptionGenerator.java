@@ -1,5 +1,6 @@
 package com.example.wardrobe.description;
 
+import com.example.wardrobe.garment.entity.Color;
 import com.example.wardrobe.garment.entity.Garment;
 import com.example.wardrobe.garment.entity.GarmentCondition;
 import org.springframework.stereotype.Component;
@@ -13,7 +14,7 @@ public class TemplateDescriptionGenerator implements DescriptionGenerator {
     public String generate(Garment garment) {
         String name = normalize(garment.getName());
         String brand = normalize(garment.getBrand());
-        String color = normalize(garment.getColor());
+        String color = colorText(garment.getColor());
         String size = normalize(garment.getSize());
         String conditionText = conditionText(garment.getCondition());
 
@@ -24,7 +25,7 @@ public class TemplateDescriptionGenerator implements DescriptionGenerator {
             head.append(' ').append(brand);
         }
         if (color != null) {
-            head.append(' ').append(color.toLowerCase(Locale.ROOT));
+            head.append(' ').append(color);
         }
 
         boolean hasSize = size != null;
@@ -34,11 +35,7 @@ public class TemplateDescriptionGenerator implements DescriptionGenerator {
             head.append(", talla ").append(size);
         }
         if (hasCondition) {
-            if (hasSize) {
-                head.append(". ").append(conditionText);
-            } else {
-                head.append(". ").append(conditionText);
-            }
+            head.append(". ").append(conditionText);
         }
         return head.append('.').toString();
     }
@@ -53,6 +50,13 @@ public class TemplateDescriptionGenerator implements DescriptionGenerator {
             case GOOD -> "En buen estado";
             case USED -> "Usado";
         };
+    }
+
+    private static String colorText(Color color) {
+        if (color == null) {
+            return null;
+        }
+        return color.name().toLowerCase(Locale.ROOT);
     }
 
     private static String normalize(String s) {
