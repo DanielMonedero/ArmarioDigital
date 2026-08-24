@@ -9,6 +9,11 @@ WORKDIR /workspace
 # Install dependencies first to cache the layer.
 COPY package.json package-lock.json* ./
 RUN npm ci
+# Some NAS filesystems (notably UGOS/Btrfs volumes) drop the +x bit
+# when the build context is copied across mount boundaries. Restore
+# it on every entry under node_modules/.bin so npm scripts and CLIs
+# (vue-tsc, vite, ...) can be invoked from the next RUN step.
+RUN find node_modules/.bin -mindepth 1 -exec chmod +x {} +
 
 # Build the SPA. VITE_API_BASE_URL is empty by default, so calls hit
 # relative paths ("/api/...") which nginx will proxy to the backend.
