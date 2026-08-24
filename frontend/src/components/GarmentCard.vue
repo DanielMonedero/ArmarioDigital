@@ -26,7 +26,7 @@ const price = computed(() => {
 })
 
 const subtitleParts = computed(() =>
-  [props.garment.brand, props.garment.size].filter(Boolean)
+  [props.garment.brand, props.garment.size, props.garment.locationName].filter(Boolean)
 )
 </script>
 

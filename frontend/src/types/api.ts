@@ -281,6 +281,8 @@ export interface GarmentSummary {
   status: GarmentStatus
   season: Season
   salePrice: number | null
+  locationId: number | null
+  locationName: string | null
   coverImageId: string | null
   createdAt: string
   updatedAt: string
@@ -301,6 +303,8 @@ export interface Garment {
   salePrice: number | null
   purchasePrice: number | null
   notes: string | null
+  locationId: number | null
+  locationName: string | null
   soldAt: string | null
   createdAt: string
   updatedAt: string
@@ -321,6 +325,8 @@ export interface GarmentCreateRequest {
   salePrice?: number | null
   purchasePrice?: number | null
   notes?: string | null
+  locationId?: number | null
+  locationName?: string | null
 }
 
 export interface GarmentUpdateRequest {
@@ -337,6 +343,8 @@ export interface GarmentUpdateRequest {
   salePrice?: number | null
   purchasePrice?: number | null
   notes?: string | null
+  locationId?: number | null
+  locationName?: string | null
 }
 
 export interface PageResponse<T> {
@@ -368,6 +376,7 @@ export interface GarmentListParams {
   subcategory?: Subcategory
   color?: Color
   season?: Season
+  locationId?: number
   garmentSize?: string
   brand?: string
   condition?: GarmentCondition
@@ -375,6 +384,58 @@ export interface GarmentListParams {
   page?: number
   size?: number
   sort?: string
+}
+
+// ---------------------------------------------------------------------------
+// Locations
+// ---------------------------------------------------------------------------
+
+export interface Location {
+  id: number
+  name: string
+  garmentCount: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface LocationCreateRequest {
+  name: string
+}
+
+// ---------------------------------------------------------------------------
+// Outfits
+// ---------------------------------------------------------------------------
+
+export interface OutfitItem {
+  garmentId: number | null
+  category: Category
+  name: string
+  coverImageId: string | null
+  garment: GarmentSummary | null
+}
+
+export interface OutfitGenerateRequest {
+  season: Season
+  includeOuterwear: boolean
+  includeAccessories: boolean
+}
+
+export interface SavedOutfit {
+  id: number
+  name: string
+  season: Season
+  includeOuterwear: boolean
+  includeAccessories: boolean
+  createdAt: string
+  items: OutfitItem[]
+}
+
+export interface SavedOutfitCreateRequest {
+  name: string
+  season: Season
+  includeOuterwear: boolean
+  includeAccessories: boolean
+  garmentIds: number[]
 }
 
 export type ApiErrorCode =
@@ -388,6 +449,13 @@ export type ApiErrorCode =
   | 'USERNAME_TAKEN'
   | 'INVALID_TRANSITION'
   | 'INVALID_SUBCATEGORY'
+  | 'INVALID_LOCATION'
+  | 'LOCATION_AMBIGUOUS'
+  | 'LOCATION_IN_USE'
+  | 'LOCATION_NAME_TAKEN'
+  | 'SEASON_MISMATCH'
+  | 'UNKNOWN_GARMENTS'
+  | 'INSUFFICIENT_GARMENTS'
   | 'MISSING_IMAGE'
   | 'MISSING_PRICE'
   | 'INVALID_STATUS'

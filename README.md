@@ -158,6 +158,35 @@ scripts y las notas de arquitectura.
 | POST   | `/api/garments/{id}/move-to-wardrobe` | Transición a `WARDROBE`                  |
 | POST   | `/api/garments/{id}/mark-as-sold`   | Transición a `SOLD`                        |
 
+### Ubicaciones
+
+| Método | Path                  | Descripción                                                |
+| ------ | --------------------- | ---------------------------------------------------------- |
+| GET    | `/api/locations`      | Lista las ubicaciones del usuario con `garmentCount`       |
+| POST   | `/api/locations`      | Crea una ubicación (nombre único case-insensitive)         |
+| PUT    | `/api/locations/{id}` | Renombra una ubicación                                    |
+| DELETE | `/api/locations/{id}` | Elimina una ubicación; 409 `LOCATION_IN_USE` si tiene prendas |
+
+Las prendas aceptan un `locationId` (existente) o un `locationName` (crea
+inline; idempotente sobre el nombre). Si pasas ambos → 400 `LOCATION_AMBIGUOUS`.
+
+### Conjuntos
+
+| Método | Path                       | Descripción                                                            |
+| ------ | -------------------------- | ---------------------------------------------------------------------- |
+| POST   | `/api/outfits/generate`    | Genera un conjunto aleatorio para `{season, includeOuterwear, includeAccessories}` |
+| GET    | `/api/outfits`             | Lista los conjuntos guardados del usuario                              |
+| POST   | `/api/outfits`             | Guarda un conjunto a partir de un nombre y `garmentIds`                |
+| GET    | `/api/outfits/{id}`        | Recupera un conjunto (incluye snapshot de cada prenda)                 |
+| DELETE | `/api/outfits/{id}`        | Elimina un conjunto                                                    |
+
+Reglas del generador:
+- Toma prendas no vendidas del usuario filtradas por temporada.
+- Si hay vestidos, el 50 % de las veces se elige un vestido en lugar de la
+  pareja top + bottom.
+- Los zapatos son obligatorios; el resto es optativo según los toggles.
+- Si falta alguna categoría obligatoria → 409 `INSUFFICIENT_GARMENTS`.
+
 ### Imágenes
 
 | Método | Path                                            | Descripción                          |
@@ -176,6 +205,7 @@ GET /api/garments
   &subcategory=JEANS          # uno de Subcategory; debe pertenecer a la categoría elegida
   &color=BLUE                 # uno de los 10 valores fijos del enum Color
   &season=SUMMER              # SUMMER | WINTER
+  &locationId=4               # filtra por ubicación
   &garmentSize=M              # texto libre, igualdad sin distinguir mayúsculas
   &brand=Nike                 # igualdad sin distinguir mayúsculas
   &condition=GOOD             # NEW | LIKE_NEW | GOOD | USED
@@ -215,6 +245,8 @@ Nunca se devuelven stack traces al cliente.
   categoría padre (p. ej. `JEANS` requiere `category=BOTTOM`; la API
   rechaza el descuadre con `INVALID_SUBCATEGORY`).
 - `color` es opcional y está limitado a un enum de 10 valores fijos.
+- `locationId`/`locationName` son opcionales; el nombre es único
+  case-insensitive por usuario.
 - Una prenda debe tener siempre al menos una imagen.
 - `owner` es siempre el usuario autenticado. El frontend no puede elegirlo.
 - `salePrice` es obligatorio cuando el estado es `FOR_SALE`; se conserva

@@ -310,6 +310,10 @@ const canMarkAsSold = computed(() => garment.value?.status === 'FOR_SALE')
                 <dt>Marca</dt>
                 <dd>{{ garment.brand }}</dd>
               </div>
+              <div v-if="garment.locationName">
+                <dt>Ubicación</dt>
+                <dd>{{ garment.locationName }}</dd>
+              </div>
               <div>
                 <dt>Situación</dt>
                 <dd>{{ formatStatus(garment.status) }}</dd>

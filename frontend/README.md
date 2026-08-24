@@ -110,6 +110,9 @@ desarrollo o en el mismo origen en producción.
 - `/wardrobe` — prendas en estado `WARDROBE` (con filtros, búsqueda, paginación).
 - `/for-sale` — prendas en estado `FOR_SALE`.
 - `/sold` — prendas en estado `SOLD`.
+- `/outfits` — generador aleatorio de conjuntos y lista de conjuntos guardados.
+- `/outfits/:id` — vista detallada de un conjunto guardado.
+- `/locations` — CRUD completo de ubicaciones.
 - `/garments/new` — formulario de creación.
 - `/garments/:id` — detalle (galería, descripción, acciones de estado).
 - `/garments/:id/edit` — edición.
@@ -122,7 +125,17 @@ La pantalla de detalle incluye:
 - borrado individual de imagen;
 - reordenación por drag & drop sobre las miniaturas;
 - cambio de estado con confirmaciones explícitas (poner en venta, vender,
-  volver al armario, eliminar).
+  volver al armario, eliminar);
+- campo de ubicación con selector que admite crear una nueva al vuelo.
+
+La pantalla de conjuntos incluye:
+
+- selector de temporada (obligatorio);
+- dos toggles: incluir capa exterior y/o accesorios;
+- botón **Generar conjunto** que arma el look respetando las reglas del
+  backend;
+- botón **Guardar** sobre el resultado, con nombre libre, para conservarlo;
+- lista de conjuntos guardados con acceso a detalle y borrado.
 
 ## Reglas de negocio respetadas
 

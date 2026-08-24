@@ -43,6 +43,8 @@ class GarmentServiceTest {
     @Mock private GarmentRepository garmentRepository;
     @Mock private GarmentImageRepository garmentImageRepository;
     @Mock private UserRepository userRepository;
+    @Mock private com.example.wardrobe.location.repository.LocationRepository locationRepository;
+    @Mock private com.example.wardrobe.location.service.LocationService locationService;
     @Mock private DescriptionGenerator descriptionGenerator;
     @Mock private FileSystemStorage fileSystemStorage;
 
@@ -61,7 +63,7 @@ class GarmentServiceTest {
     void createStoresGarmentOwnedByCurrentUser() {
         GarmentCreateRequest request = new GarmentCreateRequest(
                 "Camiseta", null, "M", Category.TOP, Subcategory.T_SHIRT, Color.BLUE, "Nike",
-                GarmentCondition.GOOD, GarmentStatus.WARDROBE, Season.SUMMER, null, null, null
+                GarmentCondition.GOOD, GarmentStatus.WARDROBE, Season.SUMMER, null, null, null, null, null
         );
         when(garmentRepository.save(any(Garment.class))).thenAnswer(inv -> {
             Garment g = inv.getArgument(0);
@@ -80,7 +82,7 @@ class GarmentServiceTest {
     void createWithForSaleRequiresSalePrice() {
         GarmentCreateRequest request = new GarmentCreateRequest(
                 "Camiseta", null, "M", Category.TOP, Subcategory.T_SHIRT, Color.BLUE, "Nike",
-                GarmentCondition.GOOD, GarmentStatus.FOR_SALE, Season.SUMMER, null, null, null
+                GarmentCondition.GOOD, GarmentStatus.FOR_SALE, Season.SUMMER, null, null, null, null, null
         );
         assertThatThrownBy(() -> service.create(1L, request))
                 .isInstanceOf(BadRequestException.class)
@@ -92,7 +94,7 @@ class GarmentServiceTest {
         GarmentCreateRequest request = new GarmentCreateRequest(
                 "Camiseta", null, "M", Category.TOP, Subcategory.T_SHIRT, Color.BLUE, "Nike",
                 GarmentCondition.GOOD, GarmentStatus.SOLD, Season.SUMMER,
-                new BigDecimal("10.00"), null, null
+                new BigDecimal("10.00"), null, null, null, null
         );
         assertThatThrownBy(() -> service.create(1L, request))
                 .isInstanceOf(BadRequestException.class);
@@ -102,11 +104,47 @@ class GarmentServiceTest {
     void createWithMismatchedSubcategoryIsRejected() {
         GarmentCreateRequest request = new GarmentCreateRequest(
                 "Jeans", null, "32", Category.TOP, Subcategory.JEANS, Color.BLUE, null,
-                GarmentCondition.GOOD, GarmentStatus.WARDROBE, Season.WINTER, null, null, null
+                GarmentCondition.GOOD, GarmentStatus.WARDROBE, Season.WINTER, null, null, null, null, null
         );
         assertThatThrownBy(() -> service.create(1L, request))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("Subcategory");
+    }
+
+    @Test
+    void createWithLocationNameDelegatesToLocationService() {
+        GarmentCreateRequest request = new GarmentCreateRequest(
+                "Camiseta", null, "M", Category.TOP, Subcategory.T_SHIRT, Color.BLUE, null,
+                GarmentCondition.GOOD, GarmentStatus.WARDROBE, Season.SUMMER,
+                null, null, null, null, "Armario"
+        );
+        com.example.wardrobe.location.entity.Location loc =
+                new com.example.wardrobe.location.entity.Location(owner, "Armario");
+        loc.setId(7L);
+        when(locationService.findOrCreate(1L, "Armario")).thenReturn(loc);
+        when(garmentRepository.save(any(Garment.class))).thenAnswer(inv -> {
+            Garment g = inv.getArgument(0);
+            g.setId(42L);
+            return g;
+        });
+
+        var response = service.create(1L, request);
+
+        assertThat(response.locationId()).isEqualTo(7L);
+        assertThat(response.locationName()).isEqualTo("Armario");
+        verify(locationService).findOrCreate(1L, "Armario");
+    }
+
+    @Test
+    void createWithAmbiguousLocationIsRejected() {
+        GarmentCreateRequest request = new GarmentCreateRequest(
+                "Camiseta", null, "M", Category.TOP, Subcategory.T_SHIRT, Color.BLUE, null,
+                GarmentCondition.GOOD, GarmentStatus.WARDROBE, Season.SUMMER,
+                null, null, null, 5L, "Armario"
+        );
+        assertThatThrownBy(() -> service.create(1L, request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("LOCATION_AMBIGUOUS");
     }
 
     @Test

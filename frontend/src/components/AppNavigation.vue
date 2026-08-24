@@ -14,7 +14,9 @@ const menuOpen = ref(false)
 const navItems = [
   { name: 'wardrobe', label: 'Mi armario' },
   { name: 'for-sale', label: 'En venta' },
-  { name: 'sold', label: 'Vendidas' }
+  { name: 'sold', label: 'Vendidas' },
+  { name: 'outfits', label: 'Conjuntos' },
+  { name: 'locations', label: 'Ubicaciones' }
 ] as const
 
 async function handleLogout() {

@@ -36,6 +36,7 @@ export function useGarmentList(options: UseGarmentListOptions = {}) {
     subcategory: undefined,
     color: undefined,
     season: undefined,
+    locationId: undefined,
     garmentSize: undefined,
     brand: undefined,
     condition: undefined

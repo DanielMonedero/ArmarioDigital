@@ -14,9 +14,12 @@ export function listGarments(params: GarmentListParams = {}) {
     query: {
       status: params.status,
       category: params.category,
+      subcategory: params.subcategory,
+      color: params.color,
+      season: params.season,
+      locationId: params.locationId,
       garmentSize: params.garmentSize,
       brand: params.brand,
-      color: params.color,
       condition: params.condition,
       search: params.search,
       page: params.page,

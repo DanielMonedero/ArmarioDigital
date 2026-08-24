@@ -23,7 +23,10 @@ import {
   type Season,
   type Subcategory
 } from '@/types/api'
+import { useLocations } from '@/composables/useLocations'
 import { fieldErrorFor, humanizeFieldName } from '@/utils/errors'
+
+type LocationSelection = 'none' | 'new' | number
 
 interface FormState {
   name: string
@@ -39,6 +42,8 @@ interface FormState {
   salePrice: string | number | null
   purchasePrice: string | number | null
   notes: string
+  locationSelection: LocationSelection
+  newLocationName: string
 }
 
 interface Props {
@@ -73,13 +78,19 @@ function emptyState(): FormState {
     season: 'SUMMER',
     salePrice: '',
     purchasePrice: '',
-    notes: ''
+    notes: '',
+    locationSelection: 'none',
+    newLocationName: ''
   }
 }
 
 const form = reactive<FormState>(emptyState())
 
+const { locations } = useLocations()
+
 function hydrate() {
+  const initialLocationId = props.initial.locationId ?? null
+  const initialLocationName = props.initial.locationName ?? ''
   Object.assign(form, emptyState(), {
     name: props.initial.name ?? '',
     description: props.initial.description ?? '',
@@ -93,7 +104,11 @@ function hydrate() {
     season: props.initial.season ?? 'SUMMER',
     salePrice: props.initial.salePrice != null ? String(props.initial.salePrice) : '',
     purchasePrice: props.initial.purchasePrice != null ? String(props.initial.purchasePrice) : '',
-    notes: props.initial.notes ?? ''
+    notes: props.initial.notes ?? '',
+    locationSelection: initialLocationId != null
+      ? initialLocationId
+      : (initialLocationName ? 'new' : 'none'),
+    newLocationName: initialLocationId != null ? '' : initialLocationName
   })
 }
 
@@ -139,6 +154,9 @@ function toNumberOrNull(value: unknown): number | null {
 
 function onSubmit(event: Event) {
   event.preventDefault()
+  const locationId = typeof form.locationSelection === 'number' ? form.locationSelection : null
+  const locationName =
+    form.locationSelection === 'new' ? form.newLocationName.trim() || null : null
   const payload: GarmentCreateRequest = {
     name: form.name.trim(),
     description: form.description.trim() || null,
@@ -152,7 +170,9 @@ function onSubmit(event: Event) {
     season: form.season,
     salePrice: toNumberOrNull(form.salePrice),
     purchasePrice: toNumberOrNull(form.purchasePrice),
-    notes: form.notes.trim() || null
+    notes: form.notes.trim() || null,
+    locationId,
+    locationName
   }
   emit('submit', payload)
 }
@@ -282,6 +302,31 @@ function onSubmit(event: Event) {
           maxlength="120"
         />
         <span v-if="errorByField('brand')" class="field__error">{{ errorByField('brand') }}</span>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="g-location">Ubicación</label>
+        <select
+          id="g-location"
+          v-model="form.locationSelection"
+          class="select"
+        >
+          <option value="none">Sin ubicación</option>
+          <option value="new">+ Crear nueva ubicación…</option>
+          <option v-for="loc in locations" :key="loc.id" :value="loc.id">
+            {{ loc.name }} ({{ loc.garmentCount }})
+          </option>
+        </select>
+        <input
+          v-if="form.locationSelection === 'new'"
+          v-model="form.newLocationName"
+          class="input"
+          maxlength="120"
+          placeholder="Nombre de la nueva ubicación"
+        />
+        <span v-if="errorByField('locationId') || errorByField('locationName')" class="field__error">
+          {{ errorByField('locationId') || errorByField('locationName') }}
+        </span>
       </div>
 
       <div class="field">

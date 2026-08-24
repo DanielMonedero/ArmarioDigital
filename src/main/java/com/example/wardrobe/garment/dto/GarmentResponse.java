@@ -8,6 +8,7 @@ import com.example.wardrobe.garment.entity.GarmentStatus;
 import com.example.wardrobe.garment.entity.Season;
 import com.example.wardrobe.garment.entity.Subcategory;
 import com.example.wardrobe.image.dto.ImageResponse;
+import com.example.wardrobe.location.entity.Location;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -29,6 +30,8 @@ public record GarmentResponse(
         BigDecimal salePrice,
         BigDecimal purchasePrice,
         String notes,
+        Long locationId,
+        String locationName,
         Instant soldAt,
         Instant createdAt,
         Instant updatedAt,
@@ -43,6 +46,7 @@ public record GarmentResponse(
                             .thenComparing(com.example.wardrobe.image.entity.GarmentImage::getId))
                     .map(ImageResponse::from)
                     .toList();
+        Location loc = g.getLocation();
         return new GarmentResponse(
                 g.getId(),
                 g.getName(),
@@ -58,6 +62,8 @@ public record GarmentResponse(
                 g.getSalePrice(),
                 g.getPurchasePrice(),
                 g.getNotes(),
+                loc == null ? null : loc.getId(),
+                loc == null ? null : loc.getName(),
                 g.getSoldAt(),
                 g.getCreatedAt(),
                 g.getUpdatedAt(),

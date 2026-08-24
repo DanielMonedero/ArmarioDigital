@@ -42,6 +42,12 @@ public final class GarmentSpecifications {
         return (root, query, cb) -> season == null ? cb.conjunction() : cb.equal(root.get("season"), season);
     }
 
+    public static Specification<Garment> hasLocation(Long locationId) {
+        return (root, query, cb) -> locationId == null
+                ? cb.conjunction()
+                : cb.equal(root.get("location").get("id"), locationId);
+    }
+
     public static Specification<Garment> hasSize(String size) {
         return (root, query, cb) -> (size == null || size.isBlank())
                 ? cb.conjunction()

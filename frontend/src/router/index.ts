@@ -31,6 +31,25 @@ const routes: RouteRecordRaw[] = [
     meta: { title: 'Vendidas' }
   },
   {
+    path: '/locations',
+    name: 'locations',
+    component: () => import('@/views/LocationsView.vue'),
+    meta: { title: 'Ubicaciones' }
+  },
+  {
+    path: '/outfits',
+    name: 'outfits',
+    component: () => import('@/views/OutfitsView.vue'),
+    meta: { title: 'Conjuntos' }
+  },
+  {
+    path: '/outfits/:id(\\d+)',
+    name: 'outfit-detail',
+    component: () => import('@/views/OutfitDetailView.vue'),
+    meta: { title: 'Conjunto' },
+    props: true
+  },
+  {
     path: '/garments/new',
     name: 'garment-new',
     component: () => import('@/views/GarmentNewView.vue'),

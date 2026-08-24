@@ -9,6 +9,7 @@ import com.example.wardrobe.garment.entity.Subcategory;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
@@ -51,6 +52,12 @@ public record GarmentUpdateRequest(
         BigDecimal purchasePrice,
 
         @Size(max = 4000, message = "Notes must be at most 4000 characters")
-        String notes
+        String notes,
+
+        @Positive
+        Long locationId,
+
+        @Size(max = 120, message = "Location name must be at most 120 characters")
+        String locationName
 ) {
 }

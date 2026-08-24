@@ -23,6 +23,9 @@ import com.example.wardrobe.garment.repository.GarmentSpecifications;
 import com.example.wardrobe.image.entity.GarmentImage;
 import com.example.wardrobe.image.repository.GarmentImageRepository;
 import com.example.wardrobe.image.storage.FileSystemStorage;
+import com.example.wardrobe.location.entity.Location;
+import com.example.wardrobe.location.repository.LocationRepository;
+import com.example.wardrobe.location.service.LocationService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -37,17 +40,23 @@ public class GarmentService {
     private final GarmentRepository garmentRepository;
     private final GarmentImageRepository garmentImageRepository;
     private final UserRepository userRepository;
+    private final LocationRepository locationRepository;
+    private final LocationService locationService;
     private final DescriptionGenerator descriptionGenerator;
     private final FileSystemStorage fileSystemStorage;
 
     public GarmentService(GarmentRepository garmentRepository,
                           GarmentImageRepository garmentImageRepository,
                           UserRepository userRepository,
+                          LocationRepository locationRepository,
+                          LocationService locationService,
                           DescriptionGenerator descriptionGenerator,
                           FileSystemStorage fileSystemStorage) {
         this.garmentRepository = garmentRepository;
         this.garmentImageRepository = garmentImageRepository;
         this.userRepository = userRepository;
+        this.locationRepository = locationRepository;
+        this.locationService = locationService;
         this.descriptionGenerator = descriptionGenerator;
         this.fileSystemStorage = fileSystemStorage;
     }
@@ -84,6 +93,7 @@ public class GarmentService {
         garment.setSalePrice(request.salePrice());
         garment.setPurchasePrice(request.purchasePrice());
         garment.setNotes(request.notes());
+        garment.setLocation(resolveLocation(ownerId, request.locationId(), request.locationName()));
         if (request.status() != GarmentStatus.SOLD) {
             garment.setSoldAt(null);
         }
@@ -104,6 +114,7 @@ public class GarmentService {
                                                       Subcategory subcategory,
                                                       Color color,
                                                       Season season,
+                                                      Long locationId,
                                                       String size,
                                                       String brand,
                                                       GarmentCondition condition,
@@ -116,6 +127,7 @@ public class GarmentService {
                 .and(GarmentSpecifications.hasSubcategory(subcategory))
                 .and(GarmentSpecifications.hasColor(color))
                 .and(GarmentSpecifications.hasSeason(season))
+                .and(GarmentSpecifications.hasLocation(locationId))
                 .and(GarmentSpecifications.hasSize(size))
                 .and(GarmentSpecifications.hasBrand(brand))
                 .and(GarmentSpecifications.hasCondition(condition))
@@ -203,9 +215,26 @@ public class GarmentService {
         garment.setSalePrice(request.salePrice());
         garment.setPurchasePrice(request.purchasePrice());
         garment.setNotes(request.notes());
+        garment.setLocation(resolveLocation(garment.getOwner().getId(),
+                request.locationId(), request.locationName()));
         if (request.status() == GarmentStatus.SOLD) {
             garment.setSoldAt(Instant.now());
         }
+    }
+
+    private Location resolveLocation(Long ownerId, Long locationId, String locationName) {
+        if (locationId == null && (locationName == null || locationName.isBlank())) {
+            return null;
+        }
+        if (locationId != null && locationName != null && !locationName.isBlank()) {
+            throw new BadRequestException("LOCATION_AMBIGUOUS",
+                    "Provide either locationId or locationName, not both");
+        }
+        if (locationId != null) {
+            return locationRepository.findByIdAndOwnerId(locationId, ownerId)
+                    .orElseThrow(() -> new NotFoundException("Location not found"));
+        }
+        return locationService.findOrCreate(ownerId, locationName);
     }
 
     private void validateForCreate(GarmentCreateRequest request) {

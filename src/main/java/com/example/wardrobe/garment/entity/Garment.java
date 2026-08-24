@@ -1,6 +1,7 @@
 package com.example.wardrobe.garment.entity;
 
 import com.example.wardrobe.auth.entity.User;
+import com.example.wardrobe.location.entity.Location;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -38,6 +39,10 @@ public class Garment {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "location_id")
+    private Location location;
 
     @Column(nullable = false, length = 160)
     private String name;
@@ -107,6 +112,9 @@ public class Garment {
 
     public User getOwner() { return owner; }
     public void setOwner(User owner) { this.owner = owner; }
+
+    public Location getLocation() { return location; }
+    public void setLocation(Location location) { this.location = location; }
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }

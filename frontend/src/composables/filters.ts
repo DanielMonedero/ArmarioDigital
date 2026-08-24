@@ -9,6 +9,7 @@ export interface Filters {
   condition: GarmentCondition | ''
   garmentSize: string
   brand: string
+  locationId: string
 }
 
 export const emptyFilters = (): Filters => ({
@@ -19,5 +20,6 @@ export const emptyFilters = (): Filters => ({
   season: '',
   condition: '',
   garmentSize: '',
-  brand: ''
+  brand: '',
+  locationId: ''
 })

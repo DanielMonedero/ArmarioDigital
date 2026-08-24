@@ -2,7 +2,7 @@
 interface Props {
   label?: string
   description?: string
-  icon?: 'shirt' | 'tag' | 'check' | 'plus'
+  icon?: 'shirt' | 'tag' | 'check' | 'plus' | 'box' | 'sparkles'
 }
 
 withDefaults(defineProps<Props>(), {
@@ -39,6 +39,34 @@ withDefaults(defineProps<Props>(), {
           stroke="currentColor"
           stroke-width="1.5"
           stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+      <svg v-else-if="icon === 'box'" viewBox="0 0 48 48" width="48" height="48" fill="none">
+        <path
+          d="M8 16l16-8 16 8v16l-16 8-16-8V16z"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linejoin="round"
+        />
+        <path
+          d="M8 16l16 8 16-8M24 24v16"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linejoin="round"
+        />
+      </svg>
+      <svg v-else-if="icon === 'sparkles'" viewBox="0 0 48 48" width="48" height="48" fill="none">
+        <path
+          d="M24 6l3 9 9 3-9 3-3 9-3-9-9-3 9-3z"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linejoin="round"
+        />
+        <path
+          d="M38 28l1.5 4 4 1.5-4 1.5L38 39l-1.5-4-4-1.5 4-1.5z"
+          stroke="currentColor"
+          stroke-width="1.5"
           stroke-linejoin="round"
         />
       </svg>

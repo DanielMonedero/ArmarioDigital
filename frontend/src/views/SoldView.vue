@@ -22,7 +22,8 @@ const filters = computed({
     season: params.season ?? '',
     condition: params.condition ?? '',
     garmentSize: params.garmentSize ?? '',
-    brand: params.brand ?? ''
+    brand: params.brand ?? '',
+    locationId: params.locationId != null ? String(params.locationId) : ''
   }),
   set: (value: Filters) => {
     params.search = value.search || undefined
@@ -33,6 +34,7 @@ const filters = computed({
     params.condition = (value.condition || undefined) as typeof params.condition
     params.garmentSize = value.garmentSize || undefined
     params.brand = value.brand || undefined
+    params.locationId = value.locationId ? Number(value.locationId) : undefined
   }
 })
 </script>

@@ -20,6 +20,7 @@ import {
 } from '@/types/api'
 import type { Filters } from '@/composables/filters'
 import { emptyFilters } from '@/composables/filters'
+import { useLocations } from '@/composables/useLocations'
 
 interface Props {
   modelValue: Filters
@@ -39,6 +40,8 @@ const emit = defineEmits<{
 
 const search = ref(props.modelValue.search)
 const panelOpen = ref(false)
+
+const { locations } = useLocations()
 
 const local = computed<Filters>({
   get: () => props.modelValue,
@@ -79,7 +82,8 @@ const activeCount = computed(() => {
     v.season,
     v.condition,
     v.garmentSize,
-    v.brand
+    v.brand,
+    v.locationId
   ].filter(Boolean).length
 })
 </script>
@@ -181,6 +185,21 @@ const activeCount = computed(() => {
           <span class="color-swatch__dot" :style="{ background: COLOR_HEX[local.color as Color] }" />
           <span class="color-swatch__label">{{ COLOR_LABELS[local.color as Color] }}</span>
         </span>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="filter-location">Ubicación</label>
+        <select
+          id="filter-location"
+          class="select"
+          :value="local.locationId"
+          @change="update('locationId', ($event.target as HTMLSelectElement).value)"
+        >
+          <option value="">Cualquiera</option>
+          <option v-for="loc in locations" :key="loc.id" :value="String(loc.id)">
+            {{ loc.name }}
+          </option>
+        </select>
       </div>
 
       <div class="field">

@@ -7,6 +7,7 @@ import com.example.wardrobe.garment.entity.GarmentCondition;
 import com.example.wardrobe.garment.entity.GarmentStatus;
 import com.example.wardrobe.garment.entity.Season;
 import com.example.wardrobe.garment.entity.Subcategory;
+import com.example.wardrobe.location.entity.Location;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -23,6 +24,8 @@ public record GarmentSummaryResponse(
         GarmentStatus status,
         Season season,
         BigDecimal salePrice,
+        Long locationId,
+        String locationName,
         String coverImageId,
         Instant createdAt,
         Instant updatedAt
@@ -32,6 +35,7 @@ public record GarmentSummaryResponse(
         if (g.getImages() != null && !g.getImages().isEmpty()) {
             coverImageId = String.valueOf(g.getImages().get(0).getId());
         }
+        Location loc = g.getLocation();
         return new GarmentSummaryResponse(
                 g.getId(),
                 g.getName(),
@@ -44,6 +48,8 @@ public record GarmentSummaryResponse(
                 g.getStatus(),
                 g.getSeason(),
                 g.getSalePrice(),
+                loc == null ? null : loc.getId(),
+                loc == null ? null : loc.getName(),
                 coverImageId,
                 g.getCreatedAt(),
                 g.getUpdatedAt()

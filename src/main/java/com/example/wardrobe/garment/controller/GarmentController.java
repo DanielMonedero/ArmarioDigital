@@ -47,6 +47,7 @@ public class GarmentController {
             @RequestParam(required = false) Subcategory subcategory,
             @RequestParam(required = false) Color color,
             @RequestParam(required = false) Season season,
+            @RequestParam(required = false) Long locationId,
             @RequestParam(name = "garmentSize", required = false) String garmentSize,
             @RequestParam(required = false) String brand,
             @RequestParam(required = false) GarmentCondition condition,
@@ -54,7 +55,7 @@ public class GarmentController {
             @PageableDefault(size = 20) Pageable pageable
     ) {
         Long ownerId = currentUserId(authentication);
-        return garmentService.list(ownerId, status, category, subcategory, color, season,
+        return garmentService.list(ownerId, status, category, subcategory, color, season, locationId,
                 garmentSize, brand, condition, search, pageable);
     }
 

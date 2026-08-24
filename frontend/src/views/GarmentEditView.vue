@@ -81,13 +81,17 @@ function cancel() {
         description: garment.description ?? '',
         size: garment.size,
         category: garment.category,
-        color: garment.color ?? '',
+        subcategory: garment.subcategory,
+        color: garment.color,
         brand: garment.brand ?? '',
         condition: garment.condition,
         status: garment.status,
+        season: garment.season,
         salePrice: garment.salePrice ?? null,
         purchasePrice: garment.purchasePrice ?? null,
-        notes: garment.notes ?? ''
+        notes: garment.notes ?? '',
+        locationId: garment.locationId,
+        locationName: garment.locationName ?? ''
       }"
       submit-label="Guardar cambios"
       :loading="submitting"
