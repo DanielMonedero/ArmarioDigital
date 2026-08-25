@@ -6,7 +6,8 @@ import type {
   GarmentStatus,
   GarmentUpdateRequest,
   PageResponse,
-  GarmentSummary
+  GarmentSummary,
+  WardrobeStats
 } from '@/types/api'
 
 export function listGarments(params: GarmentListParams = {}) {
@@ -27,6 +28,10 @@ export function listGarments(params: GarmentListParams = {}) {
       sort: params.sort
     }
   })
+}
+
+export function fetchWardrobeStats() {
+  return apiRequest<WardrobeStats>('/api/garments/stats')
 }
 
 export function getGarment(id: number) {

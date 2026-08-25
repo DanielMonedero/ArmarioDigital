@@ -387,6 +387,33 @@ export interface GarmentListParams {
 }
 
 // ---------------------------------------------------------------------------
+// Wardrobe stats (status = WARDROBE only, never FOR_SALE / SOLD)
+// ---------------------------------------------------------------------------
+
+export interface WardrobeStatsCategoryBucket {
+  category: Category
+  count: number
+  subcategories: WardrobeStatsSubcategoryBucket[]
+}
+
+export interface WardrobeStatsSubcategoryBucket {
+  subcategory: Subcategory
+  count: number
+}
+
+export interface WardrobeStatsDetail {
+  category: Category
+  subcategory: Subcategory | null
+  count: number
+}
+
+export interface WardrobeStats {
+  total: number
+  byCategory: WardrobeStatsCategoryBucket[]
+  details: WardrobeStatsDetail[]
+}
+
+// ---------------------------------------------------------------------------
 // Locations
 // ---------------------------------------------------------------------------
 

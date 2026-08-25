@@ -6,6 +6,14 @@ import type {
   UserResponse
 } from '@/types/api'
 
+export interface PublicConfig {
+  allowUserCreation: boolean
+}
+
+export function fetchPublicConfig() {
+  return apiRequest<PublicConfig>('/api/config')
+}
+
 export function login(payload: LoginRequest) {
   return apiRequest<LoginResponse>('/api/auth/login', {
     method: 'POST',

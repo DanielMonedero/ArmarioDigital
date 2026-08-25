@@ -27,6 +27,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -145,6 +146,37 @@ class GarmentServiceTest {
         assertThatThrownBy(() -> service.create(1L, request))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("LOCATION_AMBIGUOUS");
+    }
+
+    @Test
+    void wardrobeStatsAggregatesOnlyWardrobe() {
+        // Three rows from the JPA query: (TOP, T_SHIRT, 2), (BOTTOM, JEANS, 1),
+        // (TOP, null, 1) -- a garment with no subcategory that still counts
+        // toward the category total.
+        when(garmentRepository.countWardrobeByCategoryAndSubcategory(1L)).thenReturn(List.of(
+                new Object[]{Category.TOP, Subcategory.T_SHIRT, 2L},
+                new Object[]{Category.BOTTOM, Subcategory.JEANS, 1L},
+                new Object[]{Category.TOP, null, 1L}
+        ));
+
+        var stats = service.wardrobeStats(1L);
+
+        assertThat(stats.total()).isEqualTo(4L);
+
+        // Two category buckets, sorted by count desc.
+        assertThat(stats.byCategory()).hasSize(2);
+        assertThat(stats.byCategory().get(0).category()).isEqualTo(Category.TOP);
+        assertThat(stats.byCategory().get(0).count()).isEqualTo(3L);
+        assertThat(stats.byCategory().get(0).subcategories()).hasSize(1);
+        assertThat(stats.byCategory().get(0).subcategories().get(0).subcategory())
+                .isEqualTo(Subcategory.T_SHIRT);
+        assertThat(stats.byCategory().get(0).subcategories().get(0).count()).isEqualTo(2L);
+
+        assertThat(stats.byCategory().get(1).category()).isEqualTo(Category.BOTTOM);
+        assertThat(stats.byCategory().get(1).count()).isEqualTo(1L);
+
+        // Details preserves every row including subcategory = null.
+        assertThat(stats.details()).hasSize(3);
     }
 
     @Test

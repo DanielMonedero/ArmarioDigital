@@ -6,6 +6,7 @@ import com.example.wardrobe.garment.dto.GarmentCreateRequest;
 import com.example.wardrobe.garment.dto.GarmentResponse;
 import com.example.wardrobe.garment.dto.GarmentSummaryResponse;
 import com.example.wardrobe.garment.dto.GarmentUpdateRequest;
+import com.example.wardrobe.garment.dto.WardrobeStatsResponse;
 import com.example.wardrobe.garment.entity.Category;
 import com.example.wardrobe.garment.entity.Color;
 import com.example.wardrobe.garment.entity.GarmentCondition;
@@ -71,6 +72,12 @@ public class GarmentController {
     public GarmentResponse getById(Authentication authentication, @PathVariable Long id) {
         Long ownerId = currentUserId(authentication);
         return garmentService.getById(ownerId, id);
+    }
+
+    @GetMapping("/stats")
+    public WardrobeStatsResponse wardrobeStats(Authentication authentication) {
+        Long ownerId = currentUserId(authentication);
+        return garmentService.wardrobeStats(ownerId);
     }
 
     @PutMapping("/{id}")

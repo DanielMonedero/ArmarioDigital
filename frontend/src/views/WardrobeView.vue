@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useGarmentList } from '@/composables/useGarmentList'
 import type { Filters } from '@/composables/filters'
 import GarmentGrid from '@/components/GarmentGrid.vue'
@@ -8,10 +8,32 @@ import EmptyState from '@/components/EmptyState.vue'
 import ErrorState from '@/components/ErrorState.vue'
 import LoadingState from '@/components/LoadingState.vue'
 import UiPagination from '@/components/UiPagination.vue'
+import WardrobeStatsPanel from '@/components/WardrobeStatsPanel.vue'
+import { fetchWardrobeStats } from '@/api/garments'
+import type { WardrobeStats } from '@/types/api'
 import { describeError } from '@/utils/errors'
 
 const { items, page, totalPages, totalElements, loading, error, params, isEmpty, load, setPage } =
   useGarmentList({ status: 'WARDROBE' })
+
+const stats = ref<WardrobeStats | null>(null)
+const statsLoading = ref(false)
+
+async function refreshStats() {
+  statsLoading.value = true
+  try {
+    stats.value = await fetchWardrobeStats()
+  } catch {
+    // Non-fatal: keep the page functional even if stats fail to load.
+    stats.value = null
+  } finally {
+    statsLoading.value = false
+  }
+}
+
+onMounted(refreshStats)
+// Refresh after the user creates / edits / deletes garments.
+watch(items, refreshStats)
 
 const filters = computed({
   get: (): Filters => ({
@@ -52,6 +74,8 @@ const filters = computed({
         </RouterLink>
       </div>
     </header>
+
+    <WardrobeStatsPanel :stats="stats" :loading="statsLoading" />
 
     <GarmentFilters
       v-model="filters"

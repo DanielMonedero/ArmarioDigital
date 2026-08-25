@@ -11,6 +11,7 @@ import com.example.wardrobe.garment.dto.GarmentCreateRequest;
 import com.example.wardrobe.garment.dto.GarmentResponse;
 import com.example.wardrobe.garment.dto.GarmentSummaryResponse;
 import com.example.wardrobe.garment.dto.GarmentUpdateRequest;
+import com.example.wardrobe.garment.dto.WardrobeStatsResponse;
 import com.example.wardrobe.garment.entity.Category;
 import com.example.wardrobe.garment.entity.Color;
 import com.example.wardrobe.garment.entity.Garment;
@@ -33,6 +34,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class GarmentService {
@@ -273,5 +279,57 @@ public class GarmentService {
         }
         String t = s.trim();
         return t.isEmpty() ? null : t;
+    }
+
+    /**
+     * Aggregate counts of the user's wardrobe (status = WARDROBE only).
+     * Returns the headline total plus per-category and per-subcategory
+     * breakdowns; garments without a subcategory are counted under the
+     * parent category bucket only.
+     */
+    @Transactional(readOnly = true)
+    public WardrobeStatsResponse wardrobeStats(Long ownerId) {
+        List<Object[]> rows = garmentRepository.countWardrobeByCategoryAndSubcategory(ownerId);
+
+        Map<Category, Long> categoryTotals = new EnumMap<>(Category.class);
+        Map<Category, Map<Subcategory, Long>> subsByCategory = new EnumMap<>(Category.class);
+        List<WardrobeStatsResponse.Detail> details = new ArrayList<>();
+        long total = 0;
+
+        for (Object[] row : rows) {
+            Category category = (Category) row[0];
+            Subcategory subcategory = (Subcategory) row[1];
+            long count = ((Number) row[2]).longValue();
+            total += count;
+            categoryTotals.merge(category, count, Long::sum);
+            if (subcategory != null) {
+                subsByCategory
+                        .computeIfAbsent(category, k -> new EnumMap<>(Subcategory.class))
+                        .merge(subcategory, count, Long::sum);
+            }
+            details.add(new WardrobeStatsResponse.Detail(category, subcategory, count));
+        }
+
+        details.sort(Comparator
+                .comparing((WardrobeStatsResponse.Detail d) -> d.category().name())
+                .thenComparing(d -> d.subcategory() == null ? "" : d.subcategory().name()));
+
+        List<WardrobeStatsResponse.CategoryBucket> byCategory = new ArrayList<>();
+        // Order categories by count desc, but keep a stable order for empty buckets
+        categoryTotals.entrySet().stream()
+                .sorted(Map.Entry.<Category, Long>comparingByValue().reversed()
+                        .thenComparing(Map.Entry.comparingByKey()))
+                .forEach(entry -> {
+                    Category cat = entry.getKey();
+                    Map<Subcategory, Long> subs = subsByCategory.getOrDefault(cat, Map.of());
+                    List<WardrobeStatsResponse.SubcategoryBucket> subList = new ArrayList<>();
+                    subs.entrySet().stream()
+                            .sorted(Map.Entry.<Subcategory, Long>comparingByValue().reversed())
+                            .forEach(sub -> subList.add(
+                                    new WardrobeStatsResponse.SubcategoryBucket(sub.getKey(), sub.getValue())));
+                    byCategory.add(new WardrobeStatsResponse.CategoryBucket(cat, entry.getValue(), subList));
+                });
+
+        return new WardrobeStatsResponse(total, byCategory, details);
     }
 }
