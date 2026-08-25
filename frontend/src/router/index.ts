@@ -50,6 +50,12 @@ const routes: RouteRecordRaw[] = [
     props: true
   },
   {
+    path: '/maleta',
+    name: 'maleta',
+    component: () => import('@/views/MaletaView.vue'),
+    meta: { title: 'Maleta' }
+  },
+  {
     path: '/garments/new',
     name: 'garment-new',
     component: () => import('@/views/GarmentNewView.vue'),

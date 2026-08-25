@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import * as garmentApi from '@/api/garments'
 import * as imageApi from '@/api/images'
+import * as maletaApi from '@/api/maleta'
 import { ApiError } from '@/api/client'
 import type { Garment, GarmentUpdateRequest, ImageOrderRequest } from '@/types/api'
 import {
@@ -30,14 +31,50 @@ const router = useRouter()
 const toast = useToastStore()
 
 const id = computed(() => Number(route.params.id))
+const readonly = computed(() => route.query.readonly === '1')
 
 const garment = ref<Garment | null>(null)
 const loading = ref(false)
 const error = ref<unknown>(null)
 const mutating = ref(false)
+const inMaleta = ref(false)
+const maletaLoading = ref(false)
 const confirmDelete = ref(false)
 const confirmSoldAction = ref(false)
 const confirmWardrobeAction = ref(false)
+
+async function loadMaletaState() {
+  if (!garment.value) return
+  maletaLoading.value = true
+  try {
+    const list = await maletaApi.listMaleta()
+    inMaleta.value = list.some((item) => item.garmentId === garment.value!.id)
+  } catch {
+    inMaleta.value = false
+  } finally {
+    maletaLoading.value = false
+  }
+}
+
+async function toggleMaleta() {
+  if (!garment.value) return
+  mutating.value = true
+  try {
+    if (inMaleta.value) {
+      await maletaApi.removeFromMaleta(garment.value.id)
+      inMaleta.value = false
+      toast.success('Prenda sacada de la maleta')
+    } else {
+      await maletaApi.addToMaleta(garment.value.id)
+      inMaleta.value = true
+      toast.success('Prenda añadida a la maleta')
+    }
+  } catch (err) {
+    toast.error(describeError(err))
+  } finally {
+    mutating.value = false
+  }
+}
 
 async function load() {
   loading.value = true
@@ -50,6 +87,7 @@ async function load() {
   } finally {
     loading.value = false
   }
+  await loadMaletaState()
 }
 
 watch(() => route.params.id, load, { immediate: true })
@@ -147,20 +185,28 @@ async function reorderImages(orderedIds: number[]) {
   }
 }
 
-const canEdit = computed(() => garment.value?.status !== 'SOLD')
-const canDelete = computed(() => !!garment.value)
+const canEdit = computed(() => garment.value?.status !== 'SOLD' && !readonly.value)
+const canDelete = computed(() => !!garment.value && !readonly.value)
 const canPutForSale = computed(
-  () => garment.value?.status === 'WARDROBE' && (garment.value.images?.length ?? 0) > 0
+  () => !readonly.value && garment.value?.status === 'WARDROBE' && (garment.value.images?.length ?? 0) > 0
 )
 const canMoveToWardrobe = computed(
-  () => garment.value?.status === 'FOR_SALE' || garment.value?.status === 'SOLD'
+  () => !readonly.value && (garment.value?.status === 'FOR_SALE' || garment.value?.status === 'SOLD')
 )
-const canMarkAsSold = computed(() => garment.value?.status === 'FOR_SALE')
+const canMarkAsSold = computed(() => !readonly.value && garment.value?.status === 'FOR_SALE')
+const canToggleMaleta = computed(
+  () => garment.value?.status === 'WARDROBE' && !readonly.value
+)
 </script>
 
 <template>
   <section class="page">
-    <RouterLink :to="{ name: 'wardrobe' }" class="back-link">← Volver</RouterLink>
+    <RouterLink
+      :to="readonly ? { name: 'maleta' } : { name: 'wardrobe' }"
+      class="back-link"
+    >
+      ← {{ readonly ? 'Volver a la maleta' : 'Volver' }}
+    </RouterLink>
 
     <LoadingState v-if="loading" label="Cargando prenda…" />
 
@@ -186,6 +232,16 @@ const canMarkAsSold = computed(() => garment.value?.status === 'FOR_SALE')
           </p>
         </div>
         <div class="page__actions">
+          <button
+            v-if="canToggleMaleta"
+            type="button"
+            class="btn"
+            :class="inMaleta ? 'btn--ghost' : 'btn--primary'"
+            :disabled="mutating || maletaLoading"
+            @click="toggleMaleta"
+          >
+            {{ inMaleta ? 'Sacar de la maleta' : 'Añadir a maleta' }}
+          </button>
           <RouterLink
             v-if="canEdit"
             :to="{ name: 'garment-edit', params: { id: garment.id } }"
@@ -236,11 +292,11 @@ const canMarkAsSold = computed(() => garment.value?.status === 'FOR_SALE')
         <div class="detail__media">
           <GarmentGallery
             :images="garment.images"
-            editable
+            :editable="!readonly"
             @delete="deleteImage"
             @reorder="reorderImages"
           />
-          <div class="detail__uploader">
+          <div v-if="!readonly" class="detail__uploader">
             <GarmentImageUploader :garment-id="garment.id" @uploaded="load" />
           </div>
         </div>

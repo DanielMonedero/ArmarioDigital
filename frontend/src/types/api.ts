@@ -414,6 +414,17 @@ export interface WardrobeStats {
 }
 
 // ---------------------------------------------------------------------------
+// Maleta (travel suitcase): read-only reference layer over the wardrobe.
+// ---------------------------------------------------------------------------
+
+export interface MaletaItem {
+  id: number
+  garmentId: number
+  addedAt: string
+  garment: GarmentSummary
+}
+
+// ---------------------------------------------------------------------------
 // Locations
 // ---------------------------------------------------------------------------
 
@@ -483,6 +494,8 @@ export type ApiErrorCode =
   | 'SEASON_MISMATCH'
   | 'UNKNOWN_GARMENTS'
   | 'INSUFFICIENT_GARMENTS'
+  | 'MALETA_NOT_AVAILABLE'
+  | 'MALETA_ALREADY_ADDED'
   | 'MISSING_IMAGE'
   | 'MISSING_PRICE'
   | 'INVALID_STATUS'
